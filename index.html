@@ -20,10 +20,10 @@
         <a class="side-link" href="#timeline"><span class="nav-icon">◷</span> 최신 기사</a>
       </nav>
       <div class="sidebar-section">
-        <div class="section-caption">검색 키워드</div>
-        <button class="case-link selected" type="button" data-case="chip"><span class="case-dot coral"></span><span>반도체 보조금</span></button>
-        <button class="case-link" type="button" data-case="election"><span class="case-dot yellow"></span><span>서울시장 선거</span></button>
-        <button class="case-link" type="button" data-case="climate"><span class="case-dot mint"></span><span>북극 항로 개방</span></button>
+        <div class="section-caption">최근 검색</div>
+        <div id="recentSearches" class="recent-searches">
+          <span class="recent-empty">Redis 연동 예정</span>
+        </div>
       </div>
       <div class="sidebar-footer">
         <div class="sync-indicator"><span></span><div><strong>Backend 연결</strong><small>FastAPI · NAVER API HUB</small></div></div>
@@ -32,7 +32,7 @@
 
     <main class="main-content" id="top">
       <header class="topbar">
-        <div class="breadcrumb"><span>뉴스 검색</span><span class="slash">/</span><strong id="breadcrumbCase">반도체 보조금</strong></div>
+        <div class="breadcrumb"><span>뉴스 검색</span><span class="slash">/</span><strong id="breadcrumbCase">검색어를 입력하세요</strong></div>
         <div class="top-actions"><span class="last-sync" id="lastSync"><i></i> API 연결 대기</span></div>
       </header>
 
@@ -40,11 +40,15 @@
         <section class="page-intro">
           <div>
             <div class="kicker">NAVER NEWS SEARCH <span>●</span></div>
-            <h1 id="pageTitle">반도체 보조금</h1>
-            <p id="pageDescription">반도체 보조금 관련 최신 뉴스를 NAVER에서 조회합니다.</p>
+            <h1 id="pageTitle">뉴스 검색</h1>
+            <p id="pageDescription">원하는 키워드를 입력해 NAVER 최신 뉴스를 조회합니다.</p>
+            <form id="searchForm" class="search-form">
+              <input id="searchInput" type="search" placeholder="예: Kubernetes, 인공지능, 삼성전자" autocomplete="off" aria-label="뉴스 검색어" />
+              <button class="collect-button" type="submit">검색</button>
+            </form>
           </div>
           <div class="intro-actions">
-            <button class="collect-button" id="collectButton" type="button"><span class="refresh-symbol">↻</span> 새로고침</button>
+            <button class="collect-button" id="collectButton" type="button" disabled><span class="refresh-symbol">↻</span> 새로고침</button>
           </div>
         </section>
 
@@ -74,7 +78,7 @@
         </div>
 
         <section class="timeline" id="timeline" aria-label="최신 뉴스 목록">
-          <div class="day-label"><span>뉴스 불러오는 중</span><i></i><small>잠시만 기다려 주세요.</small></div>
+          <div class="day-label"><span>검색 대기</span><i></i><small>위 검색창에 키워드를 입력하세요.</small></div>
         </section>
 
         <section class="api-info">
