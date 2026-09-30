@@ -13,7 +13,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchForm = document.getElementById('searchForm');
   const searchInput = document.getElementById('searchInput');
   const recentSearches = document.getElementById('recentSearches');
+  const pagination = document.getElementById('pagination');
+  const prevPage = document.getElementById('prevPage');
+  const nextPage = document.getElementById('nextPage');
+  const pageInfo = document.getElementById('pageInfo');
+  const PAGE_SIZE = 10;
+  const MAX_NAVER_RESULTS = 1000;
   let currentQuery = '';
+  let currentPage = 1;
   let toastTimer;
 
   const showToast = (message) => {
@@ -77,7 +84,23 @@ document.addEventListener('DOMContentLoaded', () => {
     recentSearches.innerHTML = '<span class="recent-empty">Redis 연동 후 최근 검색어가 여기에 표시됩니다.</span>';
   };
 
-  const loadNews = async (query) => {
+  const renderPagination = (total, start, itemCount) => {
+    const availableResults = Math.min(Number(total || 0), MAX_NAVER_RESULTS);
+    const totalPages = Math.max(1, Math.ceil(availableResults / PAGE_SIZE));
+    currentPage = Math.floor((Number(start || 1) - 1) / PAGE_SIZE) + 1;
+
+    if (!itemCount || availableResults <= PAGE_SIZE) {
+      pagination.hidden = true;
+      return;
+    }
+
+    pagination.hidden = false;
+    pageInfo.textContent = `${currentPage} / ${totalPages}`;
+    prevPage.disabled = currentPage <= 1;
+    nextPage.disabled = currentPage >= totalPages;
+  };
+
+  const loadNews = async (query, page = 1) => {
     query = query.trim();
     if (!query) return showToast('검색어를 입력하세요.');
     currentQuery = query;
@@ -89,22 +112,29 @@ document.addEventListener('DOMContentLoaded', () => {
     collectButton.innerHTML = '<span class="refresh-symbol">↻</span> 조회 중...';
 
     try {
-      const params = new URLSearchParams({ query, display: '10' });
+      const start = ((page - 1) * PAGE_SIZE) + 1;
+      const params = new URLSearchParams({
+        query,
+        display: String(PAGE_SIZE),
+        start: String(start)
+      });
       const response = await fetch(`/api/news?${params.toString()}`);
       if (!response.ok) throw new Error(`API 요청 실패: ${response.status}`);
       const data = await response.json();
       const items = data.items || [];
       renderNews(items);
+      renderPagination(data.total, data.start, items.length);
       displayCount.textContent = String(items.length);
       articleCount.textContent = Number(data.total || 0).toLocaleString('ko-KR');
       setUpdatedNow();
-      showToast(`${query} 최신 기사 ${items.length}건을 불러왔습니다.`);
+      showToast(`${query} ${currentPage}페이지 기사 ${items.length}건을 불러왔습니다.`);
     } catch (error) {
       console.error(error);
       displayCount.textContent = '-';
       articleCount.textContent = '-';
       lastSync.innerHTML = '<i class="error-dot"></i> API 연결 실패';
       timeline.innerHTML = '<div class="day-label"><span>뉴스를 불러오지 못했습니다.</span><i></i><small>Backend API 연결을 확인하세요.</small></div>';
+      pagination.hidden = true;
       showToast('뉴스 API 연결에 실패했습니다.');
     } finally {
       collectButton.disabled = false;
@@ -114,12 +144,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   searchForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    loadNews(searchInput.value);
+    loadNews(searchInput.value, 1);
   });
-  collectButton.addEventListener('click', () => currentQuery && loadNews(currentQuery));
+  collectButton.addEventListener('click', () => currentQuery && loadNews(currentQuery, currentPage));
+  prevPage.addEventListener('click', () => {
+    if (currentQuery && currentPage > 1) loadNews(currentQuery, currentPage - 1);
+  });
+  nextPage.addEventListener('click', () => {
+    if (currentQuery) loadNews(currentQuery, currentPage + 1);
+  });
   recentSearches.addEventListener('click', (event) => {
     const button = event.target.closest('[data-query]');
-    if (button) loadNews(button.dataset.query);
+    if (button) loadNews(button.dataset.query, 1);
   });
   renderRecentPlaceholder();
   searchInput.focus();
