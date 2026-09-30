@@ -13,3 +13,12 @@
 
 .search-form{display:flex;gap:8px;margin-top:22px;max-width:620px}.search-form input{flex:1;min-width:260px;border:1px solid #d6ddda;border-radius:6px;background:#fff;padding:12px 14px;color:var(--ink);font:500 .82rem "Noto Sans KR",sans-serif;outline:none}.search-form input:focus{border-color:var(--coral);box-shadow:0 0 0 3px var(--coral-soft)}.recent-searches{display:grid;gap:4px}.recent-empty{display:block;padding:9px 7px;color:#a1abad;font-size:.7rem;line-height:1.5}.recent-search-button{width:100%;border:0;background:transparent;border-radius:7px;padding:10px 7px;text-align:left;color:#69777e;font-size:.82rem}.recent-search-button:hover{background:#fff5f2;color:var(--ink)}
 @media (max-width:640px){.search-form{width:100%}.search-form input{min-width:0}}
+
+
+.pagination{display:flex;align-items:center;justify-content:center;gap:14px;margin:28px 0 0}
+.pagination[hidden]{display:none}
+.page-button{min-width:86px;border:1px solid #d6ddda;border-radius:6px;background:#fff;padding:9px 13px;color:#647278;font-size:.74rem;font-weight:700;box-shadow:var(--shadow)}
+.page-button:hover:not(:disabled){border-color:var(--coral);color:var(--coral)}
+.page-button:disabled{cursor:not-allowed;opacity:.4}
+.page-info{min-width:72px;text-align:center;color:#7e8b90;font:500 .7rem "DM Mono",monospace}
+@media (max-width:640px){.pagination{gap:8px}.page-button{min-width:78px}}
