@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const pageInfo = document.getElementById('pageInfo');
   const PAGE_SIZE = 10;
   const MAX_NAVER_RESULTS = 100;
+  const RECENT_NEWS_KEY = 'ocl-ai-recent-news';
+  const MAX_RECENT_NEWS = 5;
   let currentQuery = '';
   let currentPage = 1;
   let toastTimer;
@@ -84,7 +86,15 @@ document.addEventListener('DOMContentLoaded', () => {
               <p>${escapeHtml(item.description)}</p>
               <div class="fact-footer">
                 <span class="source-count">검색 API 결과</span>
-                <a class="detail-button" href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">원문 보기 <span>→</span></a>
+                <a
+                  class="detail-button"
+                  href="${escapeHtml(link)}"
+                  data-title="${escapeHtml(item.title)}"
+                  data-link="${escapeHtml(link)}"
+                  data-published="${escapeHtml(published)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >원문 보기 <span>→</span></a>
               </div>
             </div>
           </article>`;
@@ -92,8 +102,57 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   };
 
-  const renderRecentPlaceholder = () => {
-    recentSearches.innerHTML = '<span class="recent-empty">Redis 연동 후 최근 검색어가 여기에 표시됩니다.</span>';
+  const getRecentNews = () => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(RECENT_NEWS_KEY) || '[]');
+      return Array.isArray(stored) ? stored : [];
+    } catch (error) {
+      console.warn('최근 본 뉴스 기록을 불러오지 못했습니다.', error);
+      return [];
+    }
+  };
+
+  const renderRecentNews = () => {
+    const recentNews = getRecentNews();
+
+    if (!recentNews.length) {
+      recentSearches.innerHTML = '<span class="recent-empty">아직 본 뉴스가 없습니다.</span>';
+      return;
+    }
+
+    recentSearches.innerHTML = recentNews.map((item) => `
+      <a
+        class="recent-news-link"
+        href="${escapeHtml(item.link)}"
+        target="_blank"
+        rel="noopener noreferrer"
+        title="${escapeHtml(item.title)}"
+      >
+        <span class="recent-news-title">${escapeHtml(item.title)}</span>
+        <small>${escapeHtml(item.published || '날짜 정보 없음')}</small>
+      </a>
+    `).join('');
+  };
+
+  const saveRecentNews = (item) => {
+    if (!item.link || item.link === '#') return;
+
+    const recentNews = getRecentNews()
+      .filter((savedItem) => savedItem.link !== item.link);
+
+    recentNews.unshift({
+      title: item.title || '제목 없음',
+      link: item.link,
+      published: item.published || '',
+      viewedAt: new Date().toISOString()
+    });
+
+    localStorage.setItem(
+      RECENT_NEWS_KEY,
+      JSON.stringify(recentNews.slice(0, MAX_RECENT_NEWS))
+    );
+
+    renderRecentNews();
   };
 
   const renderPagination = (total, start, itemCount) => {
@@ -165,10 +224,17 @@ document.addEventListener('DOMContentLoaded', () => {
   nextPage.addEventListener('click', () => {
     if (currentQuery) loadNews(currentQuery, currentPage + 1);
   });
-  recentSearches.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-query]');
-    if (button) loadNews(button.dataset.query, 1);
+  timeline.addEventListener('click', (event) => {
+    const articleLink = event.target.closest('.detail-button');
+    if (!articleLink) return;
+
+    saveRecentNews({
+      title: articleLink.dataset.title,
+      link: articleLink.dataset.link,
+      published: articleLink.dataset.published
+    });
   });
-  renderRecentPlaceholder();
+
+  renderRecentNews();
   searchInput.focus();
 });
