@@ -38,11 +38,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const formatPublishedDate = (pubDate) => {
     const date = new Date(pubDate);
-    if (Number.isNaN(date.getTime())) return { time: '--:--', date: '날짜 정보 없음' };
-    return {
-      time: date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }),
-      date: date.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })
-    };
+    if (Number.isNaN(date.getTime())) return '날짜 정보 없음';
+
+    const parts = new Intl.DateTimeFormat('ko-KR', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).formatToParts(date);
+
+    const value = (type) => parts.find((part) => part.type === type)?.value || '';
+    return `${value('year')}-${value('month')}-${value('day')} ${value('hour')}시 ${value('minute')}분`;
   };
 
   const setUpdatedNow = () => {
@@ -64,10 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const link = item.link || item.originallink || '#';
         return `
           <article class="timeline-item fresh">
-            <div class="time-column"><strong>${published.time}</strong><span>${published.date}</span></div>
             <div class="timeline-line"><span class="timeline-dot"></span></div>
             <div class="fact-card">
-              <div class="fact-heading"><span class="new-badge">NEWS</span><span class="fact-category">NAVER 뉴스 검색</span></div>
+              <div class="fact-heading">
+                <span class="new-badge">NEWS</span>
+                <span class="published-date">${published}</span>
+                <span class="fact-category">NAVER 뉴스 검색</span>
+              </div>
               <h3>${escapeHtml(item.title)}</h3>
               <p>${escapeHtml(item.description)}</p>
               <div class="fact-footer">
