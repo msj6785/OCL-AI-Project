@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const articleCount = document.getElementById('articleCount');
   const updateTime = document.getElementById('updateTime');
   const updateDate = document.getElementById('updateDate');
-  const lastSync = document.getElementById('lastSync');
   const timeline = document.getElementById('timeline');
   const toast = document.getElementById('toast');
   const collectButton = document.getElementById('collectButton');
@@ -59,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const now = new Date();
     updateTime.textContent = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
     updateDate.textContent = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
-    lastSync.innerHTML = '<i></i> API 연결 정상 · 방금 조회';
   };
 
   const renderNews = (items) => {
@@ -220,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error(error);
       displayCount.textContent = '-';
       articleCount.textContent = '-';
-      lastSync.innerHTML = '<i class="error-dot"></i> API 연결 실패';
       timeline.innerHTML = '<div class="day-label"><span>뉴스를 불러오지 못했습니다.</span><i></i><small>Backend API 연결을 확인하세요.</small></div>';
       pagination.hidden = true;
       showToast('뉴스 API 연결에 실패했습니다.');
