@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchForm = document.getElementById('searchForm');
   const searchInput = document.getElementById('searchInput');
   const recentSearches = document.getElementById('recentSearches');
+  const clearRecentNews = document.getElementById('clearRecentNews');
   const pagination = document.getElementById('pagination');
   const prevPage = document.getElementById('prevPage');
   const nextPage = document.getElementById('nextPage');
@@ -110,25 +111,36 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const renderRecentNews = (recentNews = []) => {
+    clearRecentNews.hidden = recentNews.length === 0;
+
     if (!recentNews.length) {
       recentSearches.innerHTML = '<span class="recent-empty">아직 본 뉴스가 없습니다.</span>';
       return;
     }
 
     recentSearches.innerHTML = recentNews.map((item) => `
-      <a
-        class="recent-news-link"
-        href="${escapeHtml(item.link)}"
-        data-title="${escapeHtml(item.title)}"
-        data-link="${escapeHtml(item.link)}"
-        data-published="${escapeHtml(item.published || '')}"
-        target="_blank"
-        rel="noopener noreferrer"
-        title="${escapeHtml(item.title)}"
-      >
-        <span class="recent-news-title">${escapeHtml(item.title)}</span>
-        <small>${escapeHtml(item.published || '날짜 정보 없음')}</small>
-      </a>
+      <div class="recent-news-item">
+        <a
+          class="recent-news-link"
+          href="${escapeHtml(item.link)}"
+          data-title="${escapeHtml(item.title)}"
+          data-link="${escapeHtml(item.link)}"
+          data-published="${escapeHtml(item.published || '')}"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="${escapeHtml(item.title)}"
+        >
+          <span class="recent-news-title">${escapeHtml(item.title)}</span>
+          <small>${escapeHtml(item.published || '날짜 정보 없음')}</small>
+        </a>
+        <button
+          class="recent-news-delete"
+          type="button"
+          data-link="${escapeHtml(item.link)}"
+          aria-label="최근 본 뉴스에서 삭제"
+          title="삭제"
+        >×</button>
+      </div>
     `).join('');
   };
 
@@ -167,6 +179,25 @@ document.addEventListener('DOMContentLoaded', () => {
       renderRecentNews(data.items || []);
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const deleteRecentNews = async (link = '') => {
+    try {
+      const params = new URLSearchParams({ client_id: getClientId() });
+      if (link) params.set('link', link);
+
+      const response = await fetch(`/api/recent-news?${params.toString()}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) throw new Error(`최근 뉴스 삭제 실패: ${response.status}`);
+      const data = await response.json();
+      renderRecentNews(data.items || []);
+      showToast(link ? '최근 본 뉴스에서 삭제했습니다.' : '최근 본 뉴스를 모두 삭제했습니다.');
+    } catch (error) {
+      console.error(error);
+      showToast('최근 본 뉴스 삭제에 실패했습니다.');
     }
   };
 
@@ -250,6 +281,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   recentSearches.addEventListener('click', (event) => {
+    const deleteButton = event.target.closest('.recent-news-delete');
+    if (deleteButton) {
+      event.preventDefault();
+      deleteRecentNews(deleteButton.dataset.link);
+      return;
+    }
+
     const articleLink = event.target.closest('.recent-news-link');
     if (!articleLink) return;
 
@@ -259,6 +297,8 @@ document.addEventListener('DOMContentLoaded', () => {
       published: articleLink.dataset.published
     });
   });
+
+  clearRecentNews.addEventListener('click', () => deleteRecentNews());
 
   loadRecentNews();
   searchInput.focus();
