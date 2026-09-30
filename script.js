@@ -19,8 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const pageInfo = document.getElementById('pageInfo');
   const PAGE_SIZE = 10;
   const MAX_NAVER_RESULTS = 100;
-  const RECENT_NEWS_KEY = 'ocl-ai-recent-news';
-  const MAX_RECENT_NEWS = 5;
+  const CLIENT_ID_KEY = 'ocl-ai-client-id';
   let currentQuery = '';
   let currentPage = 1;
   let toastTimer;
@@ -102,19 +101,17 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   };
 
-  const getRecentNews = () => {
-    try {
-      const stored = JSON.parse(localStorage.getItem(RECENT_NEWS_KEY) || '[]');
-      return Array.isArray(stored) ? stored : [];
-    } catch (error) {
-      console.warn('최근 본 뉴스 기록을 불러오지 못했습니다.', error);
-      return [];
-    }
+  const getClientId = () => {
+    let clientId = localStorage.getItem(CLIENT_ID_KEY);
+    if (clientId) return clientId;
+
+    clientId = globalThis.crypto?.randomUUID?.()
+      || `client-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    localStorage.setItem(CLIENT_ID_KEY, clientId);
+    return clientId;
   };
 
-  const renderRecentNews = () => {
-    const recentNews = getRecentNews();
-
+  const renderRecentNews = (recentNews = []) => {
     if (!recentNews.length) {
       recentSearches.innerHTML = '<span class="recent-empty">아직 본 뉴스가 없습니다.</span>';
       return;
@@ -124,6 +121,9 @@ document.addEventListener('DOMContentLoaded', () => {
       <a
         class="recent-news-link"
         href="${escapeHtml(item.link)}"
+        data-title="${escapeHtml(item.title)}"
+        data-link="${escapeHtml(item.link)}"
+        data-published="${escapeHtml(item.published || '')}"
         target="_blank"
         rel="noopener noreferrer"
         title="${escapeHtml(item.title)}"
@@ -134,25 +134,42 @@ document.addEventListener('DOMContentLoaded', () => {
     `).join('');
   };
 
-  const saveRecentNews = (item) => {
+  const loadRecentNews = async () => {
+    try {
+      const params = new URLSearchParams({ client_id: getClientId() });
+      const response = await fetch(`/api/recent-news?${params.toString()}`);
+      if (!response.ok) throw new Error(`최근 뉴스 조회 실패: ${response.status}`);
+
+      const data = await response.json();
+      renderRecentNews(data.items || []);
+    } catch (error) {
+      console.error(error);
+      recentSearches.innerHTML = '<span class="recent-empty">최근 본 뉴스를 불러오지 못했습니다.</span>';
+    }
+  };
+
+  const saveRecentNews = async (item) => {
     if (!item.link || item.link === '#') return;
 
-    const recentNews = getRecentNews()
-      .filter((savedItem) => savedItem.link !== item.link);
+    try {
+      const response = await fetch('/api/recent-news', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        body: JSON.stringify({
+          client_id: getClientId(),
+          title: item.title || '제목 없음',
+          link: item.link,
+          published: item.published || ''
+        })
+      });
 
-    recentNews.unshift({
-      title: item.title || '제목 없음',
-      link: item.link,
-      published: item.published || '',
-      viewedAt: new Date().toISOString()
-    });
-
-    localStorage.setItem(
-      RECENT_NEWS_KEY,
-      JSON.stringify(recentNews.slice(0, MAX_RECENT_NEWS))
-    );
-
-    renderRecentNews();
+      if (!response.ok) throw new Error(`최근 뉴스 저장 실패: ${response.status}`);
+      const data = await response.json();
+      renderRecentNews(data.items || []);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const renderPagination = (total, start, itemCount) => {
@@ -235,6 +252,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  renderRecentNews();
+  recentSearches.addEventListener('click', (event) => {
+    const articleLink = event.target.closest('.recent-news-link');
+    if (!articleLink) return;
+
+    saveRecentNews({
+      title: articleLink.dataset.title,
+      link: articleLink.dataset.link,
+      published: articleLink.dataset.published
+    });
+  });
+
+  loadRecentNews();
   searchInput.focus();
 });
