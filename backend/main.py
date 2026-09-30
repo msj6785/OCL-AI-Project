@@ -38,6 +38,7 @@ def health():
 def get_news(
     query: str = Query(default="인공지능", min_length=1, max_length=100),
     display: int = Query(default=10, ge=1, le=100),
+    start: int = Query(default=1, ge=1, le=1000),
 ):
     client_id = os.getenv("NAVER_CLIENT_ID")
     client_secret = os.getenv("NAVER_CLIENT_SECRET")
@@ -52,7 +53,7 @@ def get_news(
         "X-NCP-APIGW-API-KEY-ID": client_id,
         "X-NCP-APIGW-API-KEY": client_secret,
     }
-    params = {"query": query, "display": display, "sort": "date"}
+    params = {"query": query, "display": display, "start": start, "sort": "date"}
 
     try:
         response = requests.get(
