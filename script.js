@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const nextPage = document.getElementById('nextPage');
   const pageInfo = document.getElementById('pageInfo');
   const PAGE_SIZE = 10;
-  const MAX_NAVER_RESULTS = 1000;
+  const MAX_NAVER_RESULTS = 100;
   let currentQuery = '';
   let currentPage = 1;
   let toastTimer;
