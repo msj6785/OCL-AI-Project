@@ -9,13 +9,13 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-app = FastAPI(title="OCL-AI News API", version="1.1.0")
+app = FastAPI(title="OCL-AI News API", version="1.2.0")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=False,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["*"],
 )
 
@@ -170,6 +170,38 @@ def save_recent_news(payload: RecentNewsRequest):
         pipe.delete(key)
         if updated:
             pipe.rpush(key, *[json.dumps(news, ensure_ascii=False) for news in updated])
+        pipe.execute()
+    except redis.RedisError as exc:
+        raise HTTPException(status_code=503, detail="Redis is unavailable") from exc
+
+    return {"items": updated}
+
+
+@app.delete("/api/recent-news")
+def delete_recent_news(
+    client_id: str = Query(min_length=1, max_length=100),
+    link: str | None = Query(default=None),
+):
+    key = recent_news_key(client_id)
+
+    try:
+        if not link:
+            redis_client.delete(key)
+            return {"items": []}
+
+        current = load_recent_news(key)
+        updated = [
+            saved for saved in current
+            if saved.get("link") != link
+        ]
+
+        pipe = redis_client.pipeline()
+        pipe.delete(key)
+        if updated:
+            pipe.rpush(
+                key,
+                *[json.dumps(news, ensure_ascii=False) for news in updated],
+            )
         pipe.execute()
     except redis.RedisError as exc:
         raise HTTPException(status_code=503, detail="Redis is unavailable") from exc
