@@ -25,3 +25,8 @@
 
 .published-date{color:#6f7d82;font:500 .66rem "DM Mono",monospace}.fact-category{margin-left:auto}
 @media (max-width:640px){.published-date{font-size:.61rem}.fact-category{width:100%;margin-left:0}}
+
+.recent-news-link{display:block;border-radius:7px;padding:9px 7px;color:#69777e;transition:.18s ease}
+.recent-news-link:hover{background:#fff5f2;color:var(--ink)}
+.recent-news-title{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:.75rem;font-weight:600;line-height:1.45}
+.recent-news-link small{display:block;margin-top:4px;color:#a1abad;font:400 .58rem "DM Mono",monospace}
