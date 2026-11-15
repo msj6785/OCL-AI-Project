@@ -315,3 +315,18 @@
 #marketChatSend:disabled { opacity: .5; cursor: wait; }
 #marketChatStatus { margin: 5px 0 0; font-size: .76rem; color: #53666d; }
 #marketChatStatus:empty { display: none; }
+
+.today-news { margin-bottom: 32px; }
+.today-news-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.today-news-heading h2 { font-size: 1.14rem; margin: 0; }
+.today-news-heading > a { color: #35545d; font-weight: 700; font-size: .77rem; }
+.today-news-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.today-news-grid article { min-width: 0; padding: 13px; background: white; border: 1px solid var(--line); border-radius: 9px; }
+.today-news-grid h3 { font-size: .85rem; margin: 0 0 6px; }
+.today-news-grid ul { margin: 0; padding: 0; list-style: none; }
+.today-news-grid li { border-top: 1px solid var(--line); padding: 7px 0; }
+.today-news-grid a { display: block; font-size: .8rem; line-height: 1.45; overflow-wrap: anywhere; }
+.today-news-grid a:hover, .today-news-heading > a:hover { text-decoration: underline; }
+.today-news-grid time, .today-news-state { color: #53666d; font-size: .72rem; }
+@media (max-width: 1100px) { .today-news-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 410px) { .today-news-grid { grid-template-columns: minmax(0, 1fr); } }

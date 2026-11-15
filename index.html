@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=stocks-ui-10" />
+  <link rel="stylesheet" href="style.css?v=stocks-ui-11" />
 </head>
 <body>
   <div class="app-shell">
@@ -57,6 +57,14 @@
           <div class="intro-actions">
             <button class="collect-button" id="collectButton" type="button" disabled><span class="refresh-symbol">↻</span> 새로고침</button>
           </div>
+        </section>
+
+        <section class="today-news" aria-labelledby="todayNewsTitle">
+          <div class="today-news-heading">
+            <h2 id="todayNewsTitle">오늘의 뉴스</h2>
+            <a href="https://news.naver.com/main/ranking/popularDay.naver" target="_blank" rel="noopener noreferrer">네이버 랭킹뉴스 ↗</a>
+          </div>
+          <div id="todayNewsGrid" class="today-news-grid" aria-busy="true"></div>
         </section>
 
         <div class="section-bar">
@@ -176,6 +184,6 @@
   </div>
 
   <div class="toast" id="toast" role="status"></div>
-  <script src="script.js?v=stocks-ui-10"></script>
+  <script src="script.js?v=stocks-ui-11"></script>
 </body>
 </html>

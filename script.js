@@ -51,6 +51,86 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${value('year')}-${value('month')}-${value('day')} ${value('hour')}시 ${value('minute')}분`;
   };
 
+  const todayGrid = document.getElementById('todayNewsGrid');
+  const todayTopics = ['경제', '증시', 'AI', '반도체'];
+  const seoulDay = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', dateStyle: 'short' });
+  const seoulTime = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+  });
+  let loadedNewsDay;
+
+  const renderTodayTopic = async (topic, day, list) => {
+    try {
+      const params = new URLSearchParams({ query: topic, display: '10' });
+      const response = await fetch(`/api/news?${params}`);
+      if (!response.ok) throw new Error('News lookup failed');
+      const { items } = await response.json();
+      const articles = new Set();
+      list.replaceChildren();
+      for (const item of items) {
+        const published = new Date(item.pubDate);
+        if (Number.isNaN(published.getTime()) || seoulDay.format(published) !== day) continue;
+        let url;
+        try {
+          url = new URL(item.link || item.originallink);
+        } catch {
+          continue;
+        }
+        if (!['http:', 'https:'].includes(url.protocol) || articles.has(url.href)) continue;
+        articles.add(url.href);
+        const row = document.createElement('li');
+        const link = document.createElement('a');
+        link.textContent = item.title || '제목 없음';
+        link.href = url.href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.dataset.title = link.textContent;
+        link.dataset.link = url.href;
+        link.dataset.publishedAt = item.pubDate;
+        const time = document.createElement('time');
+        time.dateTime = published.toISOString();
+        time.textContent = seoulTime.format(published);
+        row.append(link, time);
+        list.append(row);
+        if (articles.size === 2) break;
+      }
+      if (!list.children.length) {
+        const empty = document.createElement('li');
+        empty.className = 'today-news-state';
+        empty.textContent = '오늘 발행된 기사가 없습니다.';
+        list.append(empty);
+      }
+    } catch {
+      const failure = document.createElement('li');
+      failure.className = 'today-news-state';
+      failure.textContent = '기사를 불러오지 못했습니다.';
+      list.replaceChildren(failure);
+    }
+  };
+
+  const loadTodayNews = async () => {
+    if (location.hash === '#stockPanel') return;
+    const day = seoulDay.format(new Date());
+    if (loadedNewsDay === day) return;
+    loadedNewsDay = day;
+    todayGrid.setAttribute('aria-busy', 'true');
+    todayGrid.replaceChildren();
+    await Promise.all(todayTopics.map((topic) => {
+      const card = document.createElement('article');
+      const heading = document.createElement('h3');
+      heading.textContent = topic;
+      const list = document.createElement('ul');
+      const loading = document.createElement('li');
+      loading.className = 'today-news-state';
+      loading.textContent = '기사를 불러오는 중…';
+      list.append(loading);
+      card.append(heading, list);
+      todayGrid.append(card);
+      return renderTodayTopic(topic, day, list);
+    }));
+    if (loadedNewsDay === day) todayGrid.setAttribute('aria-busy', 'false');
+  };
+
   const renderNews = (items) => {
     if (!items.length) {
       timeline.innerHTML = '<div class="day-label"><span>검색 결과 없음</span><i></i><small>다른 키워드로 확인해 보세요.</small></div>';
@@ -255,7 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentQuery) loadNews(currentQuery, currentPage + 1);
   });
   document.addEventListener('click', (event) => {
-    const articleLink = event.target.closest('#timeline .detail-button, #stockNewsList a[data-link]');
+    const articleLink = event.target.closest('#timeline .detail-button, #stockNewsList a[data-link], #todayNewsGrid a[data-link]');
     if (!articleLink) return;
 
     saveRecentNews({
@@ -288,6 +368,9 @@ document.addEventListener('DOMContentLoaded', () => {
   clearRecentNews.addEventListener('click', () => deleteRecentNews());
 
   loadRecentNews();
+  loadTodayNews();
+  window.addEventListener('hashchange', loadTodayNews);
+  window.addEventListener('focus', loadTodayNews);
   if (location.hash !== "#stockPanel") searchInput.focus({ preventScroll: true });
 });
 
@@ -560,6 +643,10 @@ document.addEventListener('DOMContentLoaded', () => {
     renderFavorites();
     if (fromFavorites) favoriteList.querySelector('[aria-current]')?.focus({ preventScroll: true });
     else input.focus({ preventScroll: true });
+    if (location.hash !== '#stockPanel') {
+      location.hash = 'stockPanel';
+      return;
+    }
     loadPrices();
     loadNews();
   };
