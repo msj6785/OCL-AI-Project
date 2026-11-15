@@ -316,6 +316,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const time = new Intl.DateTimeFormat('ko-KR', {
     timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false
   });
+  const favoriteKey = 'ocl-ai-stock-favorites';
+  const favoriteToggle = byId('stockFavoriteToggle');
+  const favoriteList = byId('stockFavoritesList');
+  const favoriteStatus = byId('stockFavoritesStatus');
+  let favorites = [];
+  try {
+    const stored = JSON.parse(localStorage.getItem(favoriteKey));
+    if (Array.isArray(stored)) {
+      favorites = stored.filter((item) => item && /^[0-9A-Z]{6}$/.test(item.symbol)
+        && typeof item.name === 'string' && item.name.trim());
+    }
+  } catch {
+    // Keep the stock view usable when browser storage is unavailable.
+  }
   let selectedStock = { symbol: '005930', name: '삼성전자' };
   let period = '1mo';
   let activeView;
@@ -514,6 +528,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  const renderFavorites = () => {
+    const isFavorite = favorites.some(({ symbol }) => symbol === selectedStock.symbol);
+    favoriteToggle.setAttribute('aria-pressed', String(isFavorite));
+    favoriteToggle.textContent = isFavorite ? `★ ${selectedStock.name} 해제` : `☆ ${selectedStock.name} 추가`;
+    byId('stockFavoritesEmpty').hidden = favorites.length > 0;
+    favoriteList.replaceChildren();
+    for (const stock of favorites) {
+      const li = document.createElement('li');
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = stock.name;
+      if (stock.symbol === selectedStock.symbol) button.setAttribute('aria-current', 'true');
+      button.addEventListener('click', () => selectStock(stock, true));
+      li.append(button);
+      favoriteList.append(li);
+    }
+  };
+
+  const selectStock = (stock, fromFavorites = false) => {
+    searchRequest?.abort();
+    selectedStock = stock;
+    const input = byId('stockSearch');
+    input.value = stock.name;
+    searchResults.replaceChildren();
+    pagination.hidden = true;
+    searchStatus.textContent = '';
+    favoriteStatus.textContent = '';
+    renderFavorites();
+    if (fromFavorites) favoriteList.querySelector('[aria-current]')?.focus({ preventScroll: true });
+    else input.focus({ preventScroll: true });
+    loadPrices();
+    loadNews();
+  };
+
+  favoriteToggle.addEventListener('click', () => {
+    const isFavorite = favorites.some(({ symbol }) => symbol === selectedStock.symbol);
+    const next = isFavorite
+      ? favorites.filter(({ symbol }) => symbol !== selectedStock.symbol)
+      : [...favorites, { symbol: selectedStock.symbol, name: selectedStock.name }];
+    try {
+      localStorage.setItem(favoriteKey, JSON.stringify(next));
+      favorites = next;
+      favoriteStatus.textContent = isFavorite
+        ? `${selectedStock.name} 즐겨찾기를 해제했습니다.`
+        : `${selectedStock.name}을 즐겨찾기에 추가했습니다.`;
+      renderFavorites();
+    } catch {
+      favoriteStatus.textContent = '브라우저에 즐겨찾기를 저장하지 못했습니다.';
+    }
+  });
+  renderFavorites();
+
   const listStocks = async (query, page = 1) => {
     searchRequest?.abort();
     searchRequest = new AbortController();
@@ -533,16 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const button = document.createElement('button');
         button.type = 'button';
         button.textContent = item.name;
-        button.addEventListener('click', () => {
-          selectedStock = item;
-          input.value = item.name;
-          searchResults.replaceChildren();
-          pagination.hidden = true;
-          searchStatus.textContent = '';
-          input.focus({ preventScroll: true });
-          loadPrices();
-          loadNews();
-        });
+        button.addEventListener('click', () => selectStock(item));
         li.append(button);
         searchResults.append(li);
       }

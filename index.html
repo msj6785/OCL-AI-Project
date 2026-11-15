@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=stocks-ui-5" />
+  <link rel="stylesheet" href="style.css?v=stocks-ui-6" />
 </head>
 <body>
   <div class="app-shell">
@@ -88,6 +88,15 @@
           <span id="stockPage"></span>
           <button id="stockNext" class="page-button" type="button">다음</button>
         </nav>
+        <section class="stock-favorites" aria-labelledby="stockFavoritesTitle">
+          <div class="stock-favorites-heading">
+            <h2 id="stockFavoritesTitle">즐겨찾기</h2>
+            <button id="stockFavoriteToggle" class="outline-button" type="button" aria-pressed="false"></button>
+          </div>
+          <p id="stockFavoritesEmpty">저장한 종목이 없습니다.</p>
+          <ul id="stockFavoritesList" aria-label="즐겨찾는 종목"></ul>
+          <p id="stockFavoritesStatus" role="status"></p>
+        </section>
         <div class="stock-periods" id="stockPeriods" role="group" aria-label="차트 조회 기간">
           <button type="button" data-period="1d" aria-pressed="false">1일</button>
           <button type="button" data-period="3d" aria-pressed="false">3일</button>
@@ -130,6 +139,6 @@
   </div>
 
   <div class="toast" id="toast" role="status"></div>
-  <script src="script.js?v=stocks-ui-5"></script>
+  <script src="script.js?v=stocks-ui-6"></script>
 </body>
 </html>
