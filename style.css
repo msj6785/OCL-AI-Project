@@ -37,3 +37,26 @@
 .recent-news-link{padding-right:28px}
 .recent-news-delete{position:absolute;top:7px;right:4px;width:22px;height:22px;border:0;border-radius:50%;background:transparent;color:#a1abad;font-size:1rem;line-height:1}
 .recent-news-delete:hover{background:var(--coral-soft);color:var(--coral)}
+
+.section-switch, .stock-form { display: flex; align-items: center; gap: 8px; }
+.section-switch { margin-left: auto; }
+.section-switch button, .stock-form select {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--ink);
+  padding: 8px 12px;
+}
+.section-switch button[aria-pressed="true"] {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: white;
+}
+.stock-form { flex-wrap: wrap; }
+.stock-chart, .stock-news { margin-top: 20px; }
+.stock-chart h2, .stock-news h2 { margin: 0 0 12px; font-size: 1rem; }
+.stock-chart canvas { display: block; width: 100%; height: auto; }
+.stock-news ul { padding-left: 20px; line-height: 1.7; }
+.stock-news a:hover { text-decoration: underline; }
+
+#newsBreadcrumb[hidden] { display: none; }

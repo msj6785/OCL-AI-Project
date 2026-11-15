@@ -2,10 +2,12 @@ import html
 import json
 import os
 import re
+from threading import Lock
+from time import monotonic
 
 import redis
 import requests
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Path, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -207,3 +209,74 @@ def delete_recent_news(
         raise HTTPException(status_code=503, detail="Redis is unavailable") from exc
 
     return {"items": updated}
+
+
+TOSS_API_URL = "https://openapi.tossinvest.com"
+toss_token_lock = Lock()
+toss_token = None
+toss_token_expiry = 0.0
+
+
+def get_toss_token(rejected_token: str | None = None) -> str:
+    global toss_token, toss_token_expiry
+
+    with toss_token_lock:
+        if toss_token and toss_token != rejected_token and monotonic() < toss_token_expiry:
+            return toss_token
+
+        client_id = os.getenv("TOSS_CLIENT_ID")
+        client_secret = os.getenv("TOSS_CLIENT_SECRET")
+        if not client_id or not client_secret:
+            raise HTTPException(status_code=503, detail="Toss API credentials are missing")
+
+        requested_at = monotonic()
+        response = requests.post(
+            f"{TOSS_API_URL}/oauth2/token",
+            data={
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret,
+            },
+            timeout=10,
+        )
+        response.raise_for_status()
+        data = response.json()
+        toss_token_expiry = requested_at + max(0, int(data["expires_in"]) - 30)
+        toss_token = data["access_token"]
+        return toss_token
+
+
+def get_toss_market_data(path: str, params: dict):
+    token = get_toss_token()
+    url = f"{TOSS_API_URL}/api/v1/{path}"
+    response = requests.get(
+        url, headers={"Authorization": f"Bearer {token}"}, params=params, timeout=10
+    )
+    if response.status_code == 401:
+        token = get_toss_token(rejected_token=token)
+        response = requests.get(
+            url, headers={"Authorization": f"Bearer {token}"}, params=params, timeout=10
+        )
+    if response.status_code == 404:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    response.raise_for_status()
+    return response.json()["result"]
+
+
+@app.get("/api/stocks/{symbol}")
+def get_stock(symbol: str = Path(pattern=r"^[0-9A-Z]{6}$")):
+    try:
+        quotes = get_toss_market_data("prices", {"symbols": symbol})
+        if not quotes:
+            raise HTTPException(status_code=404, detail="Stock not found")
+
+        candles = get_toss_market_data(
+            "candles", {"symbol": symbol, "interval": "1d", "count": 30}
+        )
+        return {"symbol": symbol, "quote": quotes[0], "candles": candles["candles"]}
+    except requests.HTTPError as exc:
+        if exc.response.status_code == 429:
+            raise HTTPException(status_code=503, detail="Toss API rate limit exceeded") from exc
+        raise HTTPException(status_code=502, detail="Toss API request failed") from exc
+    except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
+        raise HTTPException(status_code=502, detail="Toss API request failed") from exc

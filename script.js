@@ -303,3 +303,137 @@ document.addEventListener('DOMContentLoaded', () => {
   loadRecentNews();
   searchInput.focus();
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  const byId = (id) => document.getElementById(id);
+  const newsButton = byId('showNews');
+  const stocksButton = byId('showStocks');
+  const symbol = byId('stockSymbol');
+  const quote = byId('stockQuote');
+  const chart = byId('stockChart');
+  const newsList = byId('stockNewsList');
+  const status = byId('stockStatus');
+  const newsStatus = byId('stockNewsStatus');
+  const won = new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' });
+  const date = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul', dateStyle: 'short'
+  });
+  const dateTime = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul', dateStyle: 'short', timeStyle: 'short'
+  });
+  let pending;
+
+  const loadJson = async (url, signal) => {
+    const response = await fetch(url, { signal });
+    if (!response.ok) throw new Error('API request failed');
+    return response.json();
+  };
+
+  const drawChart = (candles) => {
+    const points = candles
+      .filter((candle) => candle.closePrice != null)
+      .map((candle) => ({ time: Date.parse(candle.timestamp), price: Number(candle.closePrice) }))
+      .filter(({ time, price }) => Number.isFinite(time) && Number.isFinite(price))
+      .sort((a, b) => a.time - b.time);
+
+    if (!points.length) return false;
+
+    const canvas = byId('stockCanvas');
+    const context = canvas.getContext('2d');
+    const prices = points.map(({ price }) => price);
+    const low = Math.min(...prices);
+    const high = Math.max(...prices);
+    const { width, height } = canvas;
+    context.clearRect(0, 0, width, height);
+    context.strokeStyle = '#d94e43';
+    context.lineWidth = 3;
+    context.beginPath();
+    points.forEach(({ price }, index) => {
+      const x = points.length === 1 ? width / 2 : 12 + index * (width - 24) / (points.length - 1);
+      const y = high === low ? height / 2 : height - 12 - (price - low) * (height - 24) / (high - low);
+      if (index === 0) context.moveTo(x, y);
+      else context.lineTo(x, y);
+      if (points.length === 1) context.lineTo(x + 1, y);
+    });
+    context.stroke();
+    const range = `${date.format(points[0].time)} ~ ${date.format(points.at(-1).time)} · ${won.format(low)} ~ ${won.format(high)}`;
+    canvas.setAttribute('aria-label', `종가 차트, ${range}`);
+    byId('stockChartRange').textContent = range;
+    return true;
+  };
+
+  const loadStock = () => {
+    pending?.abort();
+    pending = new AbortController();
+    const { signal } = pending;
+    const code = symbol.value;
+    const name = symbol.selectedOptions[0].textContent.split(' (')[0];
+    quote.hidden = true;
+    chart.hidden = true;
+    newsList.replaceChildren();
+    status.textContent = '시세 조회 중…';
+    newsStatus.textContent = '관련 뉴스 조회 중…';
+
+    loadJson(`/api/stocks/${code}`, signal).then((data) => {
+      if (signal.aborted) return;
+      byId('stockPrice').textContent = won.format(Number(data.quote.lastPrice));
+      byId('stockTime').textContent = `시세 기준 ${dateTime.format(new Date(data.quote.timestamp))}`;
+      const quoteDay = date.format(new Date(data.quote.timestamp));
+      const previous = data.candles.find((candle) => {
+        const candleTime = Date.parse(candle.timestamp);
+        return candleTime < Date.parse(data.quote.timestamp) && date.format(candleTime) !== quoteDay;
+      });
+      const previousClose = Number(previous?.closePrice);
+      const change = (Number(data.quote.lastPrice) / previousClose - 1) * 100;
+      byId('stockChange').textContent = previousClose > 0 && Number.isFinite(change)
+        ? `전일 대비 ${change > 0 ? '+' : ''}${change.toFixed(2)}%` : '';
+      quote.hidden = false;
+      chart.hidden = !drawChart(data.candles);
+      status.textContent = chart.hidden ? '표시할 일봉 데이터가 없습니다.' : '';
+    }).catch(() => {
+      if (!signal.aborted) status.textContent = '토스증권 시세를 불러오지 못했습니다.';
+    });
+
+    const params = new URLSearchParams({ query: name, display: '5' });
+    loadJson(`/api/news?${params}`, signal).then(({ items }) => {
+      if (signal.aborted) return;
+      for (const item of items) {
+        const url = URL.canParse(item.originallink || item.link)
+          ? new URL(item.originallink || item.link) : null;
+        if (!url || !['https:', 'http:'].includes(url.protocol)) continue;
+        const li = document.createElement('li');
+        const link = document.createElement('a');
+        link.href = url.href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = item.title;
+        li.append(link);
+        newsList.append(li);
+      }
+      newsStatus.textContent = newsList.children.length ? '' : '관련 뉴스가 없습니다.';
+    }).catch(() => {
+      if (!signal.aborted) newsStatus.textContent = '관련 뉴스를 불러오지 못했습니다.';
+    });
+  };
+
+  const showStocks = (visible) => {
+    byId('newsPanel').hidden = visible;
+    byId('newsBreadcrumb').hidden = visible;
+    byId('stockPanel').hidden = !visible;
+    newsButton.setAttribute('aria-pressed', String(!visible));
+    stocksButton.setAttribute('aria-pressed', String(visible));
+    if (visible) loadStock();
+    else pending?.abort();
+  };
+
+  newsButton.addEventListener('click', () => showStocks(false));
+  stocksButton.addEventListener('click', () => showStocks(true));
+  document.querySelectorAll('.sidebar a').forEach((link) => {
+    link.addEventListener('click', () => showStocks(false));
+  });
+  symbol.addEventListener('change', loadStock);
+  byId('stockForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    loadStock();
+  });
+});

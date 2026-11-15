@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OCL-AI | NAVER 뉴스 모니터</title>
+  <title>OCL-AI | 뉴스 · 국내 주식</title>
   <meta name="description" content="NAVER 뉴스 검색 API를 이용한 실시간 뉴스 모니터" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -32,10 +32,14 @@
 
     <main class="main-content" id="top">
       <header class="topbar">
-        <div class="breadcrumb"><span>뉴스 검색</span><span class="slash">/</span><strong id="breadcrumbCase">검색어를 입력하세요</strong></div>
+        <div class="breadcrumb" id="newsBreadcrumb"><span>뉴스 검색</span><span class="slash">/</span><strong id="breadcrumbCase">검색어를 입력하세요</strong></div>
+        <nav class="section-switch" aria-label="서비스 메뉴">
+          <button type="button" id="showNews" aria-pressed="true">뉴스</button>
+          <button type="button" id="showStocks" aria-pressed="false">주식</button>
+        </nav>
       </header>
 
-      <div class="content-wrap">
+      <div class="content-wrap" id="newsPanel">
         <section class="page-intro">
           <div>
             <div class="kicker">NAVER NEWS SEARCH <span>●</span></div>
@@ -95,6 +99,40 @@
           <small>AI 요약·중복 기사 분석·출처 신뢰도 평가는 아직 적용하지 않았습니다.</small>
         </section>
       </div>
+      <section class="content-wrap" id="stockPanel" aria-labelledby="stockTitle" hidden>
+        <div class="page-intro">
+          <div>
+            <h1 id="stockTitle">국내 주식</h1>
+            <p>토스증권 시세와 네이버 종목 뉴스</p>
+          </div>
+        </div>
+        <form id="stockForm" class="stock-form">
+          <label for="stockSymbol">종목</label>
+          <select id="stockSymbol">
+            <option value="005930">삼성전자 (005930)</option>
+            <option value="000660">SK하이닉스 (000660)</option>
+            <option value="035420">NAVER (035420)</option>
+          </select>
+          <button class="collect-button" type="submit">새로고침</button>
+        </form>
+        <p id="stockStatus" role="status"></p>
+        <article class="summary-card" id="stockQuote" hidden>
+          <span class="summary-label">현재가</span>
+          <strong id="stockPrice"></strong>
+          <span id="stockChange" class="summary-note"></span>
+          <span id="stockTime" class="summary-note"></span>
+        </article>
+        <article class="summary-card stock-chart" id="stockChart" hidden>
+          <h2>최근 30거래일 종가</h2>
+          <canvas id="stockCanvas" width="780" height="240" role="img"></canvas>
+          <p class="summary-note" id="stockChartRange"></p>
+        </article>
+        <section class="stock-news" aria-labelledby="stockNewsTitle">
+          <h2 id="stockNewsTitle">종목 관련 뉴스</h2>
+          <p id="stockNewsStatus" role="status"></p>
+          <ul id="stockNewsList"></ul>
+        </section>
+      </section>
     </main>
   </div>
 
