@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=stocks-ui-7" />
+  <link rel="stylesheet" href="style.css?v=stocks-ui-8" />
 </head>
 <body>
   <div class="app-shell">
@@ -75,6 +75,12 @@
             <p>관심 종목의 시세와 관련 뉴스를 확인하세요.</p>
           </div>
         </div>
+          <aside class="stock-favorites" aria-label="즐겨찾기">
+            <span class="stock-favorites-icon" aria-hidden="true">★</span>
+            <p id="stockFavoritesEmpty">저장한 종목이 없습니다.</p>
+            <ul id="stockFavoritesList" aria-label="즐겨찾는 종목"></ul>
+            <p id="stockFavoritesStatus" role="status"></p>
+          </aside>
         <form id="stockForm" class="stock-form">
           <label for="stockSearch">종목 검색</label>
           <input id="stockSearch" type="search" placeholder="종목명 입력 (예: 네이버)" maxlength="40" />
@@ -99,12 +105,12 @@
                 <button type="button" data-period="1y" aria-pressed="false">1년</button>
                 <button type="button" data-period="3y" aria-pressed="false">3년</button>
               </div>
-              <button id="stockFavoriteToggle" class="outline-button stock-favorite-star" type="button" aria-label="즐겨찾기" aria-pressed="false">☆</button>
             </div>
             <p id="stockStatus" role="status"></p>
             <article class="summary-card" id="stockQuote" hidden>
               <div class="stock-card-head">
                 <h2 id="stockName"></h2>
+                <button id="stockFavoriteToggle" class="outline-button stock-favorite-star" type="button" aria-label="즐겨찾기" aria-pressed="false">☆</button>
               </div>
               <span class="summary-label">현재가</span>
               <strong id="stockPrice"></strong>
@@ -123,12 +129,6 @@
               <p class="summary-note" id="stockChartRange"></p>
             </article>
           </div>
-          <aside class="stock-favorites" aria-label="즐겨찾기">
-            <span class="stock-favorites-icon" aria-hidden="true">★</span>
-            <p id="stockFavoritesEmpty">저장한 종목이 없습니다.</p>
-            <ul id="stockFavoritesList" aria-label="즐겨찾는 종목"></ul>
-            <p id="stockFavoritesStatus" role="status"></p>
-          </aside>
         </div>
         <section class="stock-news" aria-labelledby="stockNewsTitle">
           <div class="stock-card-head">
@@ -142,7 +142,33 @@
     </main>
   </div>
 
+  <div class="market-chat">
+    <button id="marketChatToggle" type="button" aria-expanded="false" aria-controls="marketChatPanel">AI 챗봇</button>
+    <section id="marketChatPanel" class="market-chat-panel" aria-labelledby="marketChatTitle" hidden>
+      <header>
+        <h2 id="marketChatTitle">뉴스·주식 도우미</h2>
+        <button id="marketChatClose" type="button" aria-label="챗봇 닫기">×</button>
+      </header>
+      <div id="marketChatLog" class="market-chat-log" role="log" aria-live="polite"></div>
+      <form id="marketChatForm">
+        <label for="marketChatMode">조회 방식</label>
+        <select id="marketChatMode">
+          <option value="news">뉴스 찾기</option>
+          <option value="stock">주식 조회</option>
+          <option value="stock_recommendation">관심 종목 추천</option>
+          <option value="news_recommendation">뉴스 추천</option>
+        </select>
+        <label for="marketChatQuery">검색어</label>
+        <div class="market-chat-input">
+          <input id="marketChatQuery" maxlength="160" placeholder="예: 반도체, 인공지능" />
+          <button id="marketChatSend" class="collect-button" type="submit">전송</button>
+        </div>
+        <p id="marketChatStatus" role="status"></p>
+      </form>
+    </section>
+  </div>
+
   <div class="toast" id="toast" role="status"></div>
-  <script src="script.js?v=stocks-ui-7"></script>
+  <script src="script.js?v=stocks-ui-8"></script>
 </body>
 </html>

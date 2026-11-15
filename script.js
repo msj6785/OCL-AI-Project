@@ -694,3 +694,106 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('hashchange', syncView);
   syncView();
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  const byId = (id) => document.getElementById(id);
+  const toggle = byId('marketChatToggle');
+  const panel = byId('marketChatPanel');
+  const form = byId('marketChatForm');
+  const mode = byId('marketChatMode');
+  const input = byId('marketChatQuery');
+  const send = byId('marketChatSend');
+  const log = byId('marketChatLog');
+  const status = byId('marketChatStatus');
+  const placeholders = {
+    news: '예: 반도체, 인공지능',
+    stock: '예: 삼성전자, 네이버',
+    stock_recommendation: '관심 종목을 쉼표로 구분하거나 비워두세요',
+    news_recommendation: '관심 주제 또는 빈칸',
+  };
+
+  const setOpen = (open) => {
+    panel.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+    if (open) input.focus();
+    else toggle.focus();
+  };
+
+  const renderMessage = (text, user = false) => {
+    const message = document.createElement('p');
+    message.className = user ? 'market-chat-message user' : 'market-chat-message';
+    message.textContent = text;
+    log.append(message);
+    log.scrollTop = log.scrollHeight;
+  };
+
+  const renderSources = (sources) => {
+    const list = document.createElement('ol');
+    list.className = 'market-chat-sources';
+    sources.forEach(({ url, title }, index) => {
+      let parsed;
+      try { parsed = new URL(url); } catch { return; }
+      if (!['https:', 'http:'].includes(parsed.protocol)) return;
+      const item = document.createElement('li');
+      item.value = index + 1;
+      const link = document.createElement('a');
+      link.href = parsed.href;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = title;
+      item.append(link);
+      list.append(item);
+    });
+    if (list.children.length) log.append(list);
+    log.scrollTop = log.scrollHeight;
+  };
+
+  toggle.addEventListener('click', () => setOpen(panel.hidden));
+  byId('marketChatClose').addEventListener('click', () => setOpen(false));
+  panel.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') setOpen(false);
+  });
+  mode.addEventListener('change', () => {
+    input.placeholder = placeholders[mode.value];
+    status.textContent = '';
+  });
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (send.disabled) return;
+    const query = input.value.trim();
+    const requestedMode = mode.value;
+    if (['news', 'stock'].includes(requestedMode) && !query) {
+      status.textContent = '검색어를 입력하세요.';
+      input.focus();
+      return;
+    }
+
+    const label = mode.selectedOptions[0].textContent;
+    renderMessage(query ? `${label} · ${query}` : label, true);
+    send.disabled = true;
+    status.textContent = '뉴스와 시세 데이터를 확인하는 중…';
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: requestedMode, query }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        status.textContent = result.detail === 'Chat API key is missing'
+          ? '챗봇 API 키 설정이 필요합니다.'
+          : result.detail === 'No matching stock'
+            ? '일치하는 종목이 없습니다. 종목명을 확인해 주세요.'
+            : '답변을 가져오지 못했습니다. 다시 시도해 주세요.';
+        return;
+      }
+      renderMessage(result.answer);
+      renderSources(result.sources);
+      status.textContent = '';
+    } catch {
+      status.textContent = '챗봇에 연결하지 못했습니다. 다시 시도해 주세요.';
+    } finally {
+      send.disabled = false;
+    }
+  });
+});

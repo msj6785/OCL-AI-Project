@@ -142,15 +142,8 @@
 .stock-pagination { display: flex; align-items: center; gap: 10px; margin: 10px 0 16px; }
 .stock-pagination[hidden] { display: none; }
 
-.stock-workspace {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(150px, 23%, 220px);
-  gap: 16px;
-  align-items: start;
-}
-.stock-toolbar { display: flex; align-items: center; gap: 12px; }
-.stock-toolbar .stock-periods { margin: 0; }
 .stock-toolbar { margin: 16px 0; }
+.stock-toolbar .stock-periods { margin: 0; }
 .stock-favorite-star {
   flex: 0 0 42px;
   width: 42px;
@@ -186,7 +179,47 @@
 #stockFavoritesList button[aria-current] { background: var(--navy); color: white; }
 #stockFavoritesEmpty, #stockFavoritesStatus { color: #53666d; margin: 8px 0 0; font-size: .8rem; }
 
+#stockPanel:target { position: relative; }
+#stockQuote .stock-card-head { justify-content: space-between; }
+.stock-favorites { position: absolute; top: 35px; right: 0; width: min(220px, 25%); max-height: 155px; overflow: auto; }
+#stockPanel .page-intro, #stockPanel .stock-form { max-width: 72%; }
+
 @media (max-width: 1000px) {
-  .stock-workspace { grid-template-columns: minmax(0, 1fr); }
-  .stock-favorites { margin-top: 0; }
+  .stock-favorites { position: static; width: auto; margin: 0 0 14px; }
+  #stockPanel .page-intro, #stockPanel .stock-form { max-width: none; }
 }
+
+.market-chat { position: fixed; bottom: 22px; right: 22px; z-index: 12; }
+#marketChatToggle {
+  display: block; margin-left: auto; border: 0; border-radius: 22px;
+  padding: 12px 17px; background: var(--navy); color: white; font-weight: 700;
+}
+.market-chat-panel {
+  position: absolute; bottom: calc(100% + 10px); right: 0;
+  width: min(380px, calc(100vw - 44px)); max-height: min(610px, calc(100dvh - 95px));
+  overflow: auto; background: white; border: 1px solid var(--line);
+  border-radius: 14px; box-shadow: 0 14px 40px #1721272b;
+}
+.market-chat-panel header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 16px; background: var(--navy); color: white;
+}
+.market-chat-panel header h2 { margin: 0; font-size: 1rem; }
+#marketChatClose { border: 0; background: transparent; color: white; font-size: 1.3rem; }
+.market-chat-log { padding: 12px; max-height: 320px; overflow: auto; }
+.market-chat-log:empty, #marketChatStatus:empty { display: none; }
+.market-chat-message {
+  margin: 0 0 8px; padding: 10px; border-radius: 8px;
+  background: var(--paper); font-size: .83rem; line-height: 1.6; white-space: pre-wrap;
+}
+.market-chat-message.user { background: var(--coral-soft); }
+.market-chat-sources { font-size: .76rem; padding-left: 23px; }
+.market-chat-sources a { text-decoration: underline; }
+#marketChatForm { display: grid; gap: 6px; padding: 12px; border-top: 1px solid var(--line); }
+#marketChatForm label { font-size: .76rem; font-weight: 700; }
+#marketChatForm input, #marketChatForm select {
+  padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: white; font: inherit;
+}
+.market-chat-input { display: flex; gap: 6px; }
+.market-chat-input input { min-width: 0; flex: 1; }
+#marketChatStatus { margin: 0; font-size: .76rem; color: #53666d; }
