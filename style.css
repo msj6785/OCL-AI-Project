@@ -170,13 +170,12 @@
   padding: 7px 10px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  background: var(--paper);
+  background: white;
   color: var(--ink);
   font-size: .8rem;
   text-align: left;
   overflow-wrap: anywhere;
 }
-#stockFavoritesList button[aria-current] { background: var(--navy); color: white; }
 #stockFavoritesEmpty, #stockFavoritesStatus { color: #53666d; margin: 8px 0 0; font-size: .8rem; }
 
 #stockQuote .stock-card-head { justify-content: space-between; }
