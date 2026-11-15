@@ -92,8 +92,9 @@
 .stock-chart .summary-note { text-align: right; color: #53666d; }
 .stock-news { background: white; border: 1px solid var(--line); padding: 20px; }
 .stock-news ul { padding: 0; margin: 0; list-style: none; }
-.stock-news li { border-top: 1px solid var(--line); }
-.stock-news a { display: block; padding: 12px 0; line-height: 1.6; font-size: .86rem; }
+.stock-news li { border-top: 1px solid var(--line); padding: 12px 0; }
+.stock-news a { display: block; line-height: 1.6; font-size: .86rem; }
+.stock-news-published { display: block; margin-top: 2px; color: #53666d; font-size: .75rem; }
 .stock-news a:hover { text-decoration: underline; }
 
 @media (max-width: 640px) {

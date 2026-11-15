@@ -1,3 +1,21 @@
+const formatPublishedDate = (pubDate) => {
+  const date = new Date(pubDate);
+  if (Number.isNaN(date.getTime())) return '날짜 정보 없음';
+
+  const parts = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23'
+  }).formatToParts(date);
+
+  const value = (type) => parts.find((part) => part.type === type)?.value || '';
+  return `${value('year')}-${value('month')}-${value('day')} ${value('hour')}시 ${value('minute')}분`;
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   const title = document.getElementById('pageTitle');
   const description = document.getElementById('pageDescription');
@@ -31,24 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const div = document.createElement('div');
     div.textContent = value;
     return div.innerHTML;
-  };
-
-  const formatPublishedDate = (pubDate) => {
-    const date = new Date(pubDate);
-    if (Number.isNaN(date.getTime())) return '날짜 정보 없음';
-
-    const parts = new Intl.DateTimeFormat('ko-KR', {
-      timeZone: 'Asia/Seoul',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).formatToParts(date);
-
-    const value = (type) => parts.find((part) => part.type === type)?.value || '';
-    return `${value('year')}-${value('month')}-${value('day')} ${value('hour')}시 ${value('minute')}분`;
   };
 
   const todayGrid = document.getElementById('todayNewsGrid');
@@ -602,7 +602,14 @@ document.addEventListener('DOMContentLoaded', () => {
         link.dataset.title = item.title || '';
         link.dataset.link = url.href;
         link.dataset.publishedAt = item.pubDate || '';
-        li.append(link);
+
+        const published = new Date(item.pubDate || '');
+        const hasPublishedDate = !Number.isNaN(published.getTime());
+        const dateLabel = document.createElement(hasPublishedDate ? 'time' : 'span');
+        dateLabel.className = 'stock-news-published';
+        if (hasPublishedDate) dateLabel.dateTime = published.toISOString();
+        dateLabel.textContent = formatPublishedDate(published);
+        li.append(link, dateLabel);
         newsList.append(li);
       }
       newsStatus.textContent = newsList.children.length ? '' : '관련 뉴스가 없습니다.';
