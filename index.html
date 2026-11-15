@@ -8,13 +8,21 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=stocks-ui-8" />
+  <link rel="stylesheet" href="style.css?v=stocks-ui-9" />
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
       <a class="brand" href="#top"><span class="brand-mark">O</span><span>OCL<span>-AI</span></span></a>
 
+      <div id="sidebarStockFavorites">
+          <aside id="stockFavorites" class="stock-favorites" aria-label="즐겨찾기">
+            <span class="stock-favorites-icon" aria-hidden="true">★</span>
+            <p id="stockFavoritesEmpty">저장한 종목이 없습니다.</p>
+            <ul id="stockFavoritesList" aria-label="즐겨찾는 종목"></ul>
+            <p id="stockFavoritesStatus" role="status"></p>
+          </aside>
+      </div>
       <div class="sidebar-section">
         <div class="section-caption">
           <span>최근 본 뉴스</span>
@@ -75,12 +83,7 @@
             <p>관심 종목의 시세와 관련 뉴스를 확인하세요.</p>
           </div>
         </div>
-          <aside class="stock-favorites" aria-label="즐겨찾기">
-            <span class="stock-favorites-icon" aria-hidden="true">★</span>
-            <p id="stockFavoritesEmpty">저장한 종목이 없습니다.</p>
-            <ul id="stockFavoritesList" aria-label="즐겨찾는 종목"></ul>
-            <p id="stockFavoritesStatus" role="status"></p>
-          </aside>
+        <div id="mobileStockFavorites"></div>
         <form id="stockForm" class="stock-form">
           <label for="stockSearch">종목 검색</label>
           <input id="stockSearch" type="search" placeholder="종목명 입력 (예: 네이버)" maxlength="40" />
@@ -151,16 +154,10 @@
       </header>
       <div id="marketChatLog" class="market-chat-log" role="log" aria-live="polite"></div>
       <form id="marketChatForm">
-        <label for="marketChatMode">조회 방식</label>
-        <select id="marketChatMode">
-          <option value="news">뉴스 찾기</option>
-          <option value="stock">주식 조회</option>
-          <option value="stock_recommendation">관심 종목 추천</option>
-          <option value="news_recommendation">뉴스 추천</option>
-        </select>
-        <label for="marketChatQuery">검색어</label>
+        <label for="marketChatQuery">무엇을 알아볼까요?</label>
+        <p id="marketChatExamples">예를 들어 “삼성전자 주가 알려줘”, “AI 관련 최신 뉴스 찾아줘”, “관심 종목 추천해줘”, “읽을 만한 반도체 뉴스 추천해줘”라고 물어보세요.</p>
         <div class="market-chat-input">
-          <input id="marketChatQuery" maxlength="160" placeholder="예: 반도체, 인공지능" />
+          <input id="marketChatQuery" maxlength="160" placeholder="질문을 입력하세요" aria-describedby="marketChatExamples" />
           <button id="marketChatSend" class="collect-button" type="submit">전송</button>
         </div>
         <p id="marketChatStatus" role="status"></p>
@@ -169,6 +166,6 @@
   </div>
 
   <div class="toast" id="toast" role="status"></div>
-  <script src="script.js?v=stocks-ui-8"></script>
+  <script src="script.js?v=stocks-ui-9"></script>
 </body>
 </html>

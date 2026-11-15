@@ -691,6 +691,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  const mobile = window.matchMedia('(max-width: 640px)');
+  const placeFavorites = () => {
+    const slot = byId(mobile.matches ? 'mobileStockFavorites' : 'sidebarStockFavorites');
+    slot.append(byId('stockFavorites'));
+  };
+  mobile.addEventListener('change', placeFavorites);
+  placeFavorites();
+
   window.addEventListener('hashchange', syncView);
   syncView();
 });
@@ -700,18 +708,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggle = byId('marketChatToggle');
   const panel = byId('marketChatPanel');
   const form = byId('marketChatForm');
-  const mode = byId('marketChatMode');
   const input = byId('marketChatQuery');
   const send = byId('marketChatSend');
   const log = byId('marketChatLog');
   const status = byId('marketChatStatus');
-  const placeholders = {
-    news: '예: 반도체, 인공지능',
-    stock: '예: 삼성전자, 네이버',
-    stock_recommendation: '관심 종목을 쉼표로 구분하거나 비워두세요',
-    news_recommendation: '관심 주제 또는 빈칸',
-  };
-
   const setOpen = (open) => {
     panel.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
@@ -753,30 +753,25 @@ document.addEventListener('DOMContentLoaded', () => {
   panel.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') setOpen(false);
   });
-  mode.addEventListener('change', () => {
-    input.placeholder = placeholders[mode.value];
-    status.textContent = '';
-  });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (send.disabled) return;
     const query = input.value.trim();
-    const requestedMode = mode.value;
-    if (['news', 'stock'].includes(requestedMode) && !query) {
-      status.textContent = '검색어를 입력하세요.';
+    if (!query) {
+      status.textContent = '질문을 입력하세요.';
       input.focus();
       return;
     }
 
-    const label = mode.selectedOptions[0].textContent;
-    renderMessage(query ? `${label} · ${query}` : label, true);
+    renderMessage(query, true);
+    input.value = '';
     send.disabled = true;
     status.textContent = '뉴스와 시세 데이터를 확인하는 중…';
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: requestedMode, query }),
+        body: JSON.stringify({ query }),
       });
       const result = await response.json();
       if (!response.ok) {

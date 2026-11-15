@@ -179,15 +179,10 @@
 #stockFavoritesList button[aria-current] { background: var(--navy); color: white; }
 #stockFavoritesEmpty, #stockFavoritesStatus { color: #53666d; margin: 8px 0 0; font-size: .8rem; }
 
-#stockPanel:target { position: relative; }
 #stockQuote .stock-card-head { justify-content: space-between; }
-.stock-favorites { position: absolute; top: 35px; right: 0; width: min(220px, 25%); max-height: 155px; overflow: auto; }
-#stockPanel .page-intro, #stockPanel .stock-form { max-width: 72%; }
-
-@media (max-width: 1000px) {
-  .stock-favorites { position: static; width: auto; margin: 0 0 14px; }
-  #stockPanel .page-intro, #stockPanel .stock-form { max-width: none; }
-}
+#sidebarStockFavorites .stock-favorites { margin-top: 24px; }
+#mobileStockFavorites .stock-favorites { margin: 0 0 14px; }
+#marketChatExamples { margin: 0 0 4px; color: #53666d; font-size: .76rem; line-height: 1.55; }
 
 .market-chat { position: fixed; bottom: 22px; right: 22px; z-index: 12; }
 #marketChatToggle {
