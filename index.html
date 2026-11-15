@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=stocks-ui-12" />
+  <link rel="stylesheet" href="style.css?v=stocks-ui-13" />
 </head>
 <body>
   <div class="app-shell">
@@ -41,7 +41,9 @@
           <a href="#top" id="showNews" aria-current="page">뉴스</a>
           <a href="#stockPanel" id="showStocks">국내 주식</a>
         </nav>
-        <div class="breadcrumb" id="newsBreadcrumb"><strong id="breadcrumbCase"></strong></div>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">
+          <span aria-hidden="true">◐</span> 색상 반전
+        </button>
       </header>
 
       <div class="content-wrap" id="newsPanel">
@@ -184,6 +186,6 @@
   </div>
 
   <div class="toast" id="toast" role="status"></div>
-  <script src="script.js?v=stocks-ui-12"></script>
+  <script src="script.js?v=stocks-ui-13"></script>
 </body>
 </html>

@@ -38,8 +38,7 @@
 /* The fragment also switches the visible screen before JavaScript loads. */
 #stockPanel { display: none; }
 #stockPanel:target { display: block; scroll-margin-top: 76px; }
-.main-content:has(#stockPanel:target) #newsPanel,
-.main-content:has(#stockPanel:target) #newsBreadcrumb { display: none; }
+.main-content:has(#stockPanel:target) #newsPanel { display: none; }
 
 .topbar {
   position: sticky;
@@ -99,7 +98,6 @@
 
 @media (max-width: 640px) {
   .mobile-brand { display: block; font-weight: 800; }
-  #newsBreadcrumb { display: none; }
   #stockPanel:target { scroll-margin-top: 62px; }
   .topbar { justify-content: space-between; }
 }
@@ -330,3 +328,92 @@
 .today-news-grid time, .today-news-state { color: #53666d; font-size: .72rem; }
 @media (max-width: 1100px) { .today-news-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 410px) { .today-news-grid { grid-template-columns: minmax(0, 1fr); } }
+
+:root {
+  color-scheme: light;
+  --chart-label: #455763;
+  --chart-up: #d32f39;
+  --chart-down: #2563c5;
+  --chart-flat: #63757c;
+  --chart-guide: #aebcc0;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  background: var(--paper);
+  font-size: .8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.theme-toggle:focus-visible { outline: 2px solid var(--coral); outline-offset: 2px; }
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #101114;
+  --surface: #191b20;
+  --raised: #22252c;
+  --ink: #f2f4f8;
+  --muted: #b3bdca;
+  --line: #383e49;
+  --navy: #2a405c;
+  --coral: #ff897f;
+  --coral-soft: #402825;
+  --shadow: 0 12px 30px #0004;
+  --chart-label: #b3bdca;
+  --chart-up: #ff897f;
+  --chart-down: #82b2ff;
+  --chart-flat: #b3bdca;
+  --chart-guide: #7d899a;
+}
+[data-theme="dark"] :is(.sidebar, .topbar, .fact-card, .today-news-grid article,
+  .summary-card, .stock-news, .stock-favorites, #stockFavoritesList button,
+  .page-button, .stock-periods button, .stock-results button, .stock-favorite-star,
+  .market-chat-panel, .market-chat-message, .market-chat-sources, #marketChatForm) {
+  background: var(--surface);
+  border-color: var(--line);
+}
+[data-theme="dark"] :is(.theme-toggle, .stock-periods button[aria-pressed="true"]) {
+  background: var(--navy);
+  color: var(--ink);
+}
+[data-theme="dark"] :is(.search-form input, .stock-form input, .market-chat-input input) {
+  background: var(--raised);
+  border-color: var(--line);
+}
+[data-theme="dark"] :is(.page-button, .outline-button, .recent-news-link, .recent-news-link small,
+  .recent-empty, .recent-news-delete, .section-caption, .section-meta, .published-date,
+  .fact-category, .fact-card p, .source-count, .day-label, .day-label small, .page-info,
+  .today-news-grid time, .today-news-state, .summary-label, .summary-note, .stock-code,
+  .stock-message, .stock-news-published, #stockStatus, #stockNewsStatus,
+  #stockFavoritesEmpty, #stockFavoritesStatus, #marketChatStatus) {
+  color: var(--muted);
+}
+[data-theme="dark"] :is(.fact-footer, .outline-button, #marketChatForm) { border-color: var(--line); }
+[data-theme="dark"] .day-label i { background-color: var(--line); }
+[data-theme="dark"] .timeline-line::before { border-color: var(--line); }
+[data-theme="dark"] .recent-news-link:hover,
+[data-theme="dark"] .stock-results button:hover { background: var(--raised); color: var(--ink); }
+[data-theme="dark"] .collect-button { background: #ad4038; }
+[data-theme="dark"] .collect-button:hover { background: #95342d; }
+[data-theme="dark"] .today-news-heading > a { color: #a7c7f4; }
+[data-theme="dark"] :is(#stockChange[data-direction="up"], #stockFavoriteToggle[aria-pressed="true"]) {
+  color: var(--chart-up);
+}
+[data-theme="dark"] #stockChange[data-direction="down"] { color: var(--chart-down); }
+[data-theme="dark"] .market-chat {
+  --chat-tint: #223e34;
+  --chat-green-dark: #a9e0c1;
+}
+[data-theme="dark"] .market-chat-transcript { background: var(--paper); }
+
+@media (max-width: 420px) {
+  .topbar { gap: 8px; padding-inline: 12px; }
+  .section-switch { gap: 4px; }
+  .section-switch a, .theme-toggle { padding-inline: 8px; font-size: .75rem; }
+}

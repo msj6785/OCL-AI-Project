@@ -1,3 +1,27 @@
+const themeRoot = document.documentElement;
+const themeStorageKey = 'ocl-ai-theme';
+try {
+  if (localStorage.getItem(themeStorageKey) === 'dark') themeRoot.dataset.theme = 'dark';
+} catch {
+  // The theme can still be switched when browser storage is unavailable.
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const toggle = document.getElementById('themeToggle');
+  toggle.setAttribute('aria-pressed', String(themeRoot.dataset.theme === 'dark'));
+  toggle.addEventListener('click', () => {
+    const dark = themeRoot.dataset.theme !== 'dark';
+    themeRoot.dataset.theme = dark ? 'dark' : 'light';
+    toggle.setAttribute('aria-pressed', String(dark));
+    try {
+      localStorage.setItem(themeStorageKey, themeRoot.dataset.theme);
+    } catch {
+      // Keep the selection for the current page.
+    }
+    window.dispatchEvent(new Event('themechange'));
+  });
+});
+
 const formatPublishedDate = (pubDate) => {
   const date = new Date(pubDate);
   if (Number.isNaN(date.getTime())) return '날짜 정보 없음';
@@ -19,7 +43,6 @@ const formatPublishedDate = (pubDate) => {
 document.addEventListener('DOMContentLoaded', () => {
   const title = document.getElementById('pageTitle');
   const description = document.getElementById('pageDescription');
-  const breadcrumb = document.getElementById('breadcrumbCase');
   const timeline = document.getElementById('timeline');
   const toast = document.getElementById('toast');
   const collectButton = document.getElementById('collectButton');
@@ -293,7 +316,6 @@ document.addEventListener('DOMContentLoaded', () => {
     currentQuery = query;
     searchInput.value = query;
     title.textContent = query;
-    breadcrumb.textContent = query;
     description.textContent = `${query} 관련 최신 뉴스를 NAVER에서 조회합니다.`;
     collectButton.disabled = true;
     collectButton.innerHTML = '<span class="refresh-symbol">↻</span> 조회 중...';
@@ -457,13 +479,15 @@ document.addEventListener('DOMContentLoaded', () => {
       left + index * (right - left) / (points.length - 1);
     const y = (price) => 12 + (top - price) * plotHeight / (top - bottom);
 
+    const palette = getComputedStyle(canvas);
+    const color = (name) => palette.getPropertyValue(name).trim();
     context.font = '11px sans-serif';
-    context.fillStyle = '#455763';
+    context.fillStyle = color('--chart-label');
     context.textAlign = 'right';
     for (let step = 0; step <= 4; step++) {
       const price = top - step * (top - bottom) / 4;
       const line = y(price);
-      context.strokeStyle = '#e3e8e6';
+      context.strokeStyle = color('--line');
       context.beginPath();
       context.moveTo(left, line);
       context.lineTo(right, line);
@@ -479,7 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const movement = points.at(-1).price - points[0].price;
-    const lineColor = movement > 0 ? '#d32f39' : movement < 0 ? '#2563c5' : '#63757c';
+    const lineColor = color(movement > 0 ? '--chart-up' : movement < 0 ? '--chart-down' : '--chart-flat');
     const area = context.createLinearGradient(0, 12, 0, 12 + plotHeight);
     area.addColorStop(0, `${lineColor}35`);
     area.addColorStop(1, `${lineColor}00`);
@@ -506,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const point = points[selectedPoint];
     const pointX = x(selectedPoint);
     const pointY = y(point.price);
-    context.strokeStyle = '#aebcc0';
+    context.strokeStyle = color('--chart-guide');
     context.lineWidth = 1;
     context.beginPath();
     context.moveTo(pointX, 12);
@@ -747,6 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   window.addEventListener('resize', drawChart);
+  window.addEventListener('themechange', drawChart);
   canvas.addEventListener('pointermove', pointAtPointer);
   canvas.addEventListener('pointerdown', pointAtPointer);
   canvas.addEventListener('pointerleave', (event) => {
