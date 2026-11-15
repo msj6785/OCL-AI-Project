@@ -129,6 +129,18 @@
 .stock-results { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 .stock-results button { width: 100%; text-align: left; }
 .stock-results button:hover { background: var(--paper); }
-.stock-point { font-variant-numeric: tabular-nums; color: #315e65; font-weight: 700; font-size: .83rem; }
+.stock-plot { position: relative; }
+.stock-point {
+  position: absolute;
+  max-width: 100%;
+  padding: 6px 9px;
+  border-radius: 6px;
+  background: var(--navy);
+  color: white;
+  font-size: .78rem;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
 .stock-chart canvas { height: 250px; }
-.stock-point-index { width: 100%; accent-color: #315e65; }
+.stock-pagination { display: flex; align-items: center; gap: 10px; margin: 10px 0 16px; }
+.stock-pagination[hidden] { display: none; }

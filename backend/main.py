@@ -269,6 +269,8 @@ def get_toss_market_data(path: str, params: dict):
 
 
 STOCK_MASTERS = {"KOSPI": 228, "KOSDAQ": 222}
+STOCK_NAME_ALIASES = {"035420": ("네이버",)}
+STOCK_SEARCH_PAGE_SIZE = 20
 STOCK_MASTER_URL = "https://new.real.download.dws.co.kr/common/master"
 stock_catalog_lock = Lock()
 stock_catalog = []
@@ -312,24 +314,31 @@ def load_stock_catalog() -> list[dict]:
 
 
 @app.get("/api/stocks/search")
-def search_stocks(q: str = Query(min_length=1, max_length=40)):
+def search_stocks(
+    q: str = Query(default="", max_length=40),
+    page: int = Query(default=1, ge=1),
+):
     query = "".join(q.casefold().split())
-    if not query:
-        return {"items": []}
-
     matches = []
     for item in load_stock_catalog():
-        name = "".join(item["name"].casefold().split())
+        names = (item["name"], *STOCK_NAME_ALIASES.get(item["symbol"], ()))
+        names = tuple("".join(name.casefold().split()) for name in names)
         symbol = item["symbol"].casefold()
-        if query in (name, symbol):
+        if not query or query in names or query == symbol:
             matches.append((0, item))
-        elif name.startswith(query) or symbol.startswith(query):
+        elif symbol.startswith(query) or any(name.startswith(query) for name in names):
             matches.append((1, item))
-        elif query in name:
+        elif any(query in name for name in names):
             matches.append((2, item))
 
-    matches.sort(key=lambda match: (match[0], len(match[1]["name"]), match[1]["name"]))
-    return {"items": [item for _, item in matches[:20]]}
+    matches.sort(key=lambda match: (match[0], match[1]["name"].casefold(), match[1]["symbol"]))
+    start = (page - 1) * STOCK_SEARCH_PAGE_SIZE
+    return {
+        "items": [item for _, item in matches[start:start + STOCK_SEARCH_PAGE_SIZE]],
+        "total": len(matches),
+        "page": page,
+        "pageSize": STOCK_SEARCH_PAGE_SIZE,
+    }
 
 
 def candle_day(candle: dict) -> date:
