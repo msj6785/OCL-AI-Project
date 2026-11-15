@@ -531,7 +531,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const renderFavorites = () => {
     const isFavorite = favorites.some(({ symbol }) => symbol === selectedStock.symbol);
     favoriteToggle.setAttribute('aria-pressed', String(isFavorite));
-    favoriteToggle.textContent = isFavorite ? `★ ${selectedStock.name} 해제` : `☆ ${selectedStock.name} 추가`;
+    favoriteToggle.textContent = isFavorite ? '★' : '☆';
+    favoriteToggle.setAttribute('aria-label', `${selectedStock.name} 즐겨찾기`);
+    favoriteToggle.title = isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가';
     byId('stockFavoritesEmpty').hidden = favorites.length > 0;
     favoriteList.replaceChildren();
     for (const stock of favorites) {
@@ -570,9 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       localStorage.setItem(favoriteKey, JSON.stringify(next));
       favorites = next;
-      favoriteStatus.textContent = isFavorite
-        ? `${selectedStock.name} 즐겨찾기를 해제했습니다.`
-        : `${selectedStock.name}을 즐겨찾기에 추가했습니다.`;
+      favoriteStatus.textContent = '';
       renderFavorites();
     } catch {
       favoriteStatus.textContent = '브라우저에 즐겨찾기를 저장하지 못했습니다.';
