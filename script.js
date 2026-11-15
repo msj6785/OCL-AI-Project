@@ -2,10 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const title = document.getElementById('pageTitle');
   const description = document.getElementById('pageDescription');
   const breadcrumb = document.getElementById('breadcrumbCase');
-  const displayCount = document.getElementById('displayCount');
-  const articleCount = document.getElementById('articleCount');
-  const updateTime = document.getElementById('updateTime');
-  const updateDate = document.getElementById('updateDate');
   const timeline = document.getElementById('timeline');
   const toast = document.getElementById('toast');
   const collectButton = document.getElementById('collectButton');
@@ -53,12 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const value = (type) => parts.find((part) => part.type === type)?.value || '';
     return `${value('year')}-${value('month')}-${value('day')} ${value('hour')}시 ${value('minute')}분`;
-  };
-
-  const setUpdatedNow = () => {
-    const now = new Date();
-    updateTime.textContent = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
-    updateDate.textContent = now.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
   };
 
   const renderNews = (items) => {
@@ -241,14 +231,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const items = data.items || [];
       renderNews(items);
       renderPagination(data.total, data.start, items.length);
-      displayCount.textContent = String(items.length);
-      articleCount.textContent = Number(data.total || 0).toLocaleString('ko-KR');
-      setUpdatedNow();
       showToast(`${query} ${currentPage}페이지 기사 ${items.length}건을 불러왔습니다.`);
     } catch (error) {
       console.error(error);
-      displayCount.textContent = '-';
-      articleCount.textContent = '-';
       timeline.innerHTML = '<div class="day-label"><span>뉴스를 불러오지 못했습니다.</span><i></i><small>Backend API 연결을 확인하세요.</small></div>';
       pagination.hidden = true;
       showToast('뉴스 API 연결에 실패했습니다.');
@@ -269,14 +254,16 @@ document.addEventListener('DOMContentLoaded', () => {
   nextPage.addEventListener('click', () => {
     if (currentQuery) loadNews(currentQuery, currentPage + 1);
   });
-  timeline.addEventListener('click', (event) => {
-    const articleLink = event.target.closest('.detail-button');
+  document.addEventListener('click', (event) => {
+    const articleLink = event.target.closest('#timeline .detail-button, #stockNewsList a[data-link]');
     if (!articleLink) return;
 
     saveRecentNews({
       title: articleLink.dataset.title,
       link: articleLink.dataset.link,
-      published: articleLink.dataset.published
+      published: articleLink.dataset.publishedAt
+        ? formatPublishedDate(articleLink.dataset.publishedAt)
+        : articleLink.dataset.published
     });
   });
 
@@ -394,7 +381,13 @@ document.addEventListener('DOMContentLoaded', () => {
       context.fillText(axisFormat.format(points[index].time), x(index), height - 12);
     });
 
-    context.strokeStyle = '#315e65';
+    const movement = points.at(-1).price - points[0].price;
+    const lineColor = movement > 0 ? '#d32f39' : movement < 0 ? '#2563c5' : '#63757c';
+    const area = context.createLinearGradient(0, 12, 0, 12 + plotHeight);
+    area.addColorStop(0, `${lineColor}35`);
+    area.addColorStop(1, `${lineColor}00`);
+
+    context.strokeStyle = lineColor;
     context.lineWidth = 2;
     context.beginPath();
     points.forEach(({ price }, index) => {
@@ -402,7 +395,14 @@ document.addEventListener('DOMContentLoaded', () => {
       else context.lineTo(x(index), y(price));
     });
     context.stroke();
-    canvas.setAttribute('aria-label', `${selectedStock.name} 차트. 가격 범위 ${number.format(low)}원에서 ${number.format(high)}원. 방향키로 날짜별 가격 확인.`);
+    context.lineTo(x(points.length - 1), 12 + plotHeight);
+    context.lineTo(x(0), 12 + plotHeight);
+    context.closePath();
+    context.fillStyle = area;
+    context.fill();
+
+    const trend = movement > 0 ? '상승' : movement < 0 ? '하락' : '보합';
+    canvas.setAttribute('aria-label', `${selectedStock.name} 차트. 선택 기간 ${trend}. 가격 범위 ${number.format(low)}원에서 ${number.format(high)}원. 방향키로 날짜별 가격 확인.`);
     pointLabel.hidden = selectedPoint === null;
     if (selectedPoint === null) return;
 
@@ -415,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
     context.moveTo(pointX, 12);
     context.lineTo(pointX, 12 + plotHeight);
     context.stroke();
-    context.fillStyle = '#315e65';
+    context.fillStyle = lineColor;
     context.beginPath();
     context.arc(pointX, pointY, 4, 0, Math.PI * 2);
     context.fill();
@@ -502,6 +502,9 @@ document.addEventListener('DOMContentLoaded', () => {
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         link.textContent = item.title;
+        link.dataset.title = item.title || '';
+        link.dataset.link = url.href;
+        link.dataset.publishedAt = item.pubDate || '';
         li.append(link);
         newsList.append(li);
       }
