@@ -8,17 +8,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=stocks-ui-2" />
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
       <a class="brand" href="#top"><span class="brand-mark">O</span><span>OCL<span>-AI</span></span></a>
-      <div class="workspace-label">NEWS MONITOR</div>
-      <nav class="side-nav">
-        <a class="side-link active" href="#top"><span class="nav-icon">▦</span> 뉴스 검색</a>
-        <a class="side-link" href="#timeline"><span class="nav-icon">◷</span> 최신 기사</a>
-      </nav>
+
       <div class="sidebar-section">
         <div class="section-caption">
           <span>최근 본 뉴스</span>
@@ -32,17 +28,17 @@
 
     <main class="main-content" id="top">
       <header class="topbar">
-        <div class="breadcrumb" id="newsBreadcrumb"><span>뉴스 검색</span><span class="slash">/</span><strong id="breadcrumbCase">검색어를 입력하세요</strong></div>
+        <a class="mobile-brand" href="#top">OCL-AI</a>
         <nav class="section-switch" aria-label="서비스 메뉴">
-          <button type="button" id="showNews" aria-pressed="true">뉴스</button>
-          <button type="button" id="showStocks" aria-pressed="false">주식</button>
+          <a href="#top" id="showNews" aria-current="page">뉴스</a>
+          <a href="#stockPanel" id="showStocks">국내 주식</a>
         </nav>
+        <div class="breadcrumb" id="newsBreadcrumb"><strong id="breadcrumbCase"></strong></div>
       </header>
 
       <div class="content-wrap" id="newsPanel">
         <section class="page-intro">
           <div>
-            <div class="kicker">NAVER NEWS SEARCH <span>●</span></div>
             <h1 id="pageTitle">뉴스 검색</h1>
             <p id="pageDescription">원하는 키워드를 입력해 NAVER 최신 뉴스를 조회합니다.</p>
             <form id="searchForm" class="search-form">
@@ -88,22 +84,13 @@
           <button class="page-button" id="nextPage" type="button">다음 →</button>
         </nav>
 
-        <section class="api-info">
-          <div>
-            <span class="ai-mark">↗</span>
-            <div>
-              <h2>현재 구현된 기능</h2>
-              <p>키워드별 NAVER 뉴스 검색 · 페이지당 최신 기사 10건 · 이전/다음 페이지 이동 · 최근 본 뉴스 저장 · 기사 원문 링크</p>
-            </div>
-          </div>
-          <small>AI 요약·중복 기사 분석·출처 신뢰도 평가는 아직 적용하지 않았습니다.</small>
-        </section>
+
       </div>
-      <section class="content-wrap" id="stockPanel" aria-labelledby="stockTitle" hidden>
+      <section class="content-wrap" id="stockPanel" aria-labelledby="stockTitle">
         <div class="page-intro">
           <div>
             <h1 id="stockTitle">국내 주식</h1>
-            <p>토스증권 시세와 네이버 종목 뉴스</p>
+            <p>관심 종목의 시세와 관련 뉴스를 확인하세요.</p>
           </div>
         </div>
         <form id="stockForm" class="stock-form">
@@ -117,18 +104,28 @@
         </form>
         <p id="stockStatus" role="status"></p>
         <article class="summary-card" id="stockQuote" hidden>
+          <div class="stock-card-head">
+            <h2 id="stockName"></h2>
+            <span id="stockCode" class="stock-code"></span>
+          </div>
           <span class="summary-label">현재가</span>
           <strong id="stockPrice"></strong>
           <span id="stockChange" class="summary-note"></span>
           <span id="stockTime" class="summary-note"></span>
         </article>
         <article class="summary-card stock-chart" id="stockChart" hidden>
-          <h2>최근 30거래일 종가</h2>
-          <canvas id="stockCanvas" width="780" height="240" role="img"></canvas>
+          <div class="stock-card-head">
+            <h2>최근 30거래일 종가</h2>
+            <span class="stock-code">토스증권</span>
+          </div>
+          <canvas id="stockCanvas" width="780" height="210" role="img"></canvas>
           <p class="summary-note" id="stockChartRange"></p>
         </article>
         <section class="stock-news" aria-labelledby="stockNewsTitle">
-          <h2 id="stockNewsTitle">종목 관련 뉴스</h2>
+          <div class="stock-card-head">
+            <h2 id="stockNewsTitle">종목 관련 뉴스</h2>
+            <span class="stock-code">네이버 뉴스</span>
+          </div>
           <p id="stockNewsStatus" role="status"></p>
           <ul id="stockNewsList"></ul>
         </section>
@@ -137,6 +134,6 @@
   </div>
 
   <div class="toast" id="toast" role="status"></div>
-  <script src="script.js"></script>
+  <script src="script.js?v=stocks-ui-2"></script>
 </body>
 </html>

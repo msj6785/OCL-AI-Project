@@ -301,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
   clearRecentNews.addEventListener('click', () => deleteRecentNews());
 
   loadRecentNews();
-  searchInput.focus();
+  if (location.hash !== "#stockPanel") searchInput.focus({ preventScroll: true });
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -345,7 +345,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const high = Math.max(...prices);
     const { width, height } = canvas;
     context.clearRect(0, 0, width, height);
-    context.strokeStyle = '#d94e43';
+    context.strokeStyle = '#e3e8e6';
+    context.lineWidth = 1;
+    context.beginPath();
+    for (const y of [12, height / 2, height - 12]) {
+      context.moveTo(12, y);
+      context.lineTo(width - 12, y);
+    }
+    context.stroke();
+    context.strokeStyle = '#315e65';
     context.lineWidth = 3;
     context.beginPath();
     points.forEach(({ price }, index) => {
@@ -376,6 +384,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadJson(`/api/stocks/${code}`, signal).then((data) => {
       if (signal.aborted) return;
+      byId('stockName').textContent = name;
+      byId('stockCode').textContent = code;
       byId('stockPrice').textContent = won.format(Number(data.quote.lastPrice));
       byId('stockTime').textContent = `시세 기준 ${dateTime.format(new Date(data.quote.timestamp))}`;
       const quoteDay = date.format(new Date(data.quote.timestamp));
@@ -387,6 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const change = (Number(data.quote.lastPrice) / previousClose - 1) * 100;
       byId('stockChange').textContent = previousClose > 0 && Number.isFinite(change)
         ? `전일 대비 ${change > 0 ? '+' : ''}${change.toFixed(2)}%` : '';
+      byId('stockChange').dataset.direction = change > 0 ? 'up' : change < 0 ? 'down' : '';
       quote.hidden = false;
       chart.hidden = !drawChart(data.candles);
       status.textContent = chart.hidden ? '표시할 일봉 데이터가 없습니다.' : '';
@@ -398,8 +409,12 @@ document.addEventListener('DOMContentLoaded', () => {
     loadJson(`/api/news?${params}`, signal).then(({ items }) => {
       if (signal.aborted) return;
       for (const item of items) {
-        const url = URL.canParse(item.originallink || item.link)
-          ? new URL(item.originallink || item.link) : null;
+        let url;
+        try {
+          url = new URL(item.originallink || item.link);
+        } catch {
+          continue;
+        }
         if (!url || !['https:', 'http:'].includes(url.protocol)) continue;
         const li = document.createElement('li');
         const link = document.createElement('a');
@@ -416,21 +431,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  const showStocks = (visible) => {
-    byId('newsPanel').hidden = visible;
-    byId('newsBreadcrumb').hidden = visible;
-    byId('stockPanel').hidden = !visible;
-    newsButton.setAttribute('aria-pressed', String(!visible));
-    stocksButton.setAttribute('aria-pressed', String(visible));
-    if (visible) loadStock();
+  let activeView;
+
+  const syncView = () => {
+    const view = location.hash === '#stockPanel' ? 'stocks' : 'news';
+    if (activeView === view) return;
+    activeView = view;
+    const showingStocks = view === 'stocks';
+    const selected = showingStocks ? stocksButton : newsButton;
+    const inactive = showingStocks ? newsButton : stocksButton;
+    selected.setAttribute('aria-current', 'page');
+    inactive.removeAttribute('aria-current');
+    if (showingStocks) loadStock();
     else pending?.abort();
   };
 
-  newsButton.addEventListener('click', () => showStocks(false));
-  stocksButton.addEventListener('click', () => showStocks(true));
-  document.querySelectorAll('.sidebar a').forEach((link) => {
-    link.addEventListener('click', () => showStocks(false));
-  });
+  window.addEventListener('hashchange', syncView);
+  syncView();
   symbol.addEventListener('change', loadStock);
   byId('stockForm').addEventListener('submit', (event) => {
     event.preventDefault();
