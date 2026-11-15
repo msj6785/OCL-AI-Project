@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=stocks-ui-2" />
+  <link rel="stylesheet" href="style.css?v=stocks-ui-3" />
 </head>
 <body>
   <div class="app-shell">
@@ -94,14 +94,20 @@
           </div>
         </div>
         <form id="stockForm" class="stock-form">
-          <label for="stockSymbol">종목</label>
-          <select id="stockSymbol">
-            <option value="005930">삼성전자 (005930)</option>
-            <option value="000660">SK하이닉스 (000660)</option>
-            <option value="035420">NAVER (035420)</option>
-          </select>
-          <button class="collect-button" type="submit">새로고침</button>
+          <label for="stockSearch">종목 검색</label>
+          <input id="stockSearch" type="search" placeholder="종목명 또는 종목코드" maxlength="40" required />
+          <button class="collect-button" type="submit">검색</button>
         </form>
+        <p id="stockSearchStatus" class="stock-message" role="status"></p>
+        <ul id="stockSearchResults" class="stock-results" aria-label="종목 검색 결과"></ul>
+        <div class="stock-periods" id="stockPeriods" role="group" aria-label="차트 조회 기간">
+          <button type="button" data-period="1d" aria-pressed="false">1일</button>
+          <button type="button" data-period="3d" aria-pressed="false">3일</button>
+          <button type="button" data-period="1w" aria-pressed="false">1주</button>
+          <button type="button" data-period="1mo" aria-pressed="true">1개월</button>
+          <button type="button" data-period="1y" aria-pressed="false">1년</button>
+          <button type="button" data-period="3y" aria-pressed="false">3년</button>
+        </div>
         <p id="stockStatus" role="status"></p>
         <article class="summary-card" id="stockQuote" hidden>
           <div class="stock-card-head">
@@ -115,10 +121,12 @@
         </article>
         <article class="summary-card stock-chart" id="stockChart" hidden>
           <div class="stock-card-head">
-            <h2>최근 30거래일 종가</h2>
+            <h2 id="stockChartTitle">주가 차트</h2>
             <span class="stock-code">토스증권</span>
           </div>
-          <canvas id="stockCanvas" width="780" height="210" role="img"></canvas>
+          <p id="stockPoint" class="stock-point"></p>
+          <canvas id="stockCanvas" height="250" role="img"></canvas>
+          <input id="stockPointIndex" class="stock-point-index" type="range" min="0" max="0" value="0" aria-label="차트에서 날짜별 가격 탐색" />
           <p class="summary-note" id="stockChartRange"></p>
         </article>
         <section class="stock-news" aria-labelledby="stockNewsTitle">
@@ -134,6 +142,6 @@
   </div>
 
   <div class="toast" id="toast" role="status"></div>
-  <script src="script.js?v=stocks-ui-2"></script>
+  <script src="script.js?v=stocks-ui-3"></script>
 </body>
 </html>

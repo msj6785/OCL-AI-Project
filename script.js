@@ -308,105 +308,164 @@ document.addEventListener('DOMContentLoaded', () => {
   const byId = (id) => document.getElementById(id);
   const newsButton = byId('showNews');
   const stocksButton = byId('showStocks');
-  const symbol = byId('stockSymbol');
   const quote = byId('stockQuote');
   const chart = byId('stockChart');
+  const canvas = byId('stockCanvas');
+  const pointIndex = byId('stockPointIndex');
   const newsList = byId('stockNewsList');
   const status = byId('stockStatus');
   const newsStatus = byId('stockNewsStatus');
-  const won = new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' });
-  const date = new Intl.DateTimeFormat('ko-KR', {
-    timeZone: 'Asia/Seoul', dateStyle: 'short'
-  });
+  const periodButtons = [...byId('stockPeriods').querySelectorAll('button')];
+  const searchStatus = byId('stockSearchStatus');
+  const searchResults = byId('stockSearchResults');
+  const number = new Intl.NumberFormat('ko-KR');
+  const date = new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', dateStyle: 'short' });
   const dateTime = new Intl.DateTimeFormat('ko-KR', {
-    timeZone: 'Asia/Seoul', dateStyle: 'short', timeStyle: 'short'
+    timeZone: 'Asia/Seoul', dateStyle: 'short', timeStyle: 'short', hour12: false
   });
-  let pending;
+  const time = new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false
+  });
+  let selectedStock = { symbol: '005930', name: '삼성전자' };
+  let period = '1mo';
+  let activeView;
+  let priceRequest;
+  let newsRequest;
+  let searchRequest;
+  let points = [];
 
   const loadJson = async (url, signal) => {
     const response = await fetch(url, { signal });
-    if (!response.ok) throw new Error('API request failed');
+    if (!response.ok) throw new Error(String(response.status));
     return response.json();
   };
 
-  const drawChart = (candles) => {
-    const points = candles
+  const drawChart = (selectedIndex) => {
+    if (!points.length || chart.hidden) return;
+    const context = canvas.getContext('2d');
+    const width = canvas.clientWidth;
+    const height = 250;
+    if (!width || !context) return;
+    const density = window.devicePixelRatio || 1;
+    canvas.width = Math.round(width * density);
+    canvas.height = height * density;
+    context.scale(density, density);
+
+    const prices = points.map(({ price }) => price);
+    const low = Math.min(...prices);
+    const high = Math.max(...prices);
+    const padding = Math.max(Math.ceil((high - low) * 0.08), 4);
+    const bottom = Math.max(0, low - padding);
+    const top = high + padding;
+    const left = Math.min(76, width / 3);
+    const right = width - 12;
+    const plotHeight = height - 48;
+    const x = (index) => points.length === 1 ? (left + right) / 2 :
+      left + index * (right - left) / (points.length - 1);
+    const y = (price) => 12 + (top - price) * plotHeight / (top - bottom);
+
+    context.font = '11px sans-serif';
+    context.fillStyle = '#455763';
+    context.textAlign = 'right';
+    for (let step = 0; step <= 4; step++) {
+      const price = top - step * (top - bottom) / 4;
+      const line = y(price);
+      context.strokeStyle = '#e3e8e6';
+      context.beginPath();
+      context.moveTo(left, line);
+      context.lineTo(right, line);
+      context.stroke();
+      context.fillText(number.format(Math.round(price)), left - 7, line + 4, left - 9);
+    }
+
+    const ticks = [...new Set([0, Math.round((points.length - 1) / 2), points.length - 1])];
+    const axisFormat = period === '1d' ? time : date;
+    ticks.forEach((index) => {
+      context.textAlign = index === 0 ? 'left' : index === points.length - 1 ? 'right' : 'center';
+      context.fillText(axisFormat.format(points[index].time), x(index), height - 12);
+    });
+
+    context.strokeStyle = '#315e65';
+    context.lineWidth = 2;
+    context.beginPath();
+    points.forEach(({ price }, index) => {
+      if (index === 0) context.moveTo(x(index), y(price));
+      else context.lineTo(x(index), y(price));
+    });
+    context.stroke();
+    const point = points[selectedIndex];
+    context.fillStyle = '#315e65';
+    context.beginPath();
+    context.arc(x(selectedIndex), y(point.price), 4, 0, Math.PI * 2);
+    context.fill();
+
+    const pointLabel = `${dateTime.format(point.time)} · ${number.format(point.price)}원`;
+    byId('stockPoint').textContent = pointLabel;
+    pointIndex.setAttribute('aria-valuetext', pointLabel);
+    canvas.setAttribute('aria-label', `${selectedStock.name} 차트. 가격 범위 ${number.format(low)}원에서 ${number.format(high)}원.`);
+  };
+
+  const showChart = (candles) => {
+    points = candles
       .filter((candle) => candle.closePrice != null)
       .map((candle) => ({ time: Date.parse(candle.timestamp), price: Number(candle.closePrice) }))
       .filter(({ time, price }) => Number.isFinite(time) && Number.isFinite(price))
       .sort((a, b) => a.time - b.time);
+    chart.hidden = points.length === 0;
+    if (chart.hidden) return;
 
-    if (!points.length) return false;
-
-    const canvas = byId('stockCanvas');
-    const context = canvas.getContext('2d');
-    const prices = points.map(({ price }) => price);
-    const low = Math.min(...prices);
-    const high = Math.max(...prices);
-    const { width, height } = canvas;
-    context.clearRect(0, 0, width, height);
-    context.strokeStyle = '#e3e8e6';
-    context.lineWidth = 1;
-    context.beginPath();
-    for (const y of [12, height / 2, height - 12]) {
-      context.moveTo(12, y);
-      context.lineTo(width - 12, y);
-    }
-    context.stroke();
-    context.strokeStyle = '#315e65';
-    context.lineWidth = 3;
-    context.beginPath();
-    points.forEach(({ price }, index) => {
-      const x = points.length === 1 ? width / 2 : 12 + index * (width - 24) / (points.length - 1);
-      const y = high === low ? height / 2 : height - 12 - (price - low) * (height - 24) / (high - low);
-      if (index === 0) context.moveTo(x, y);
-      else context.lineTo(x, y);
-      if (points.length === 1) context.lineTo(x + 1, y);
-    });
-    context.stroke();
-    const range = `${date.format(points[0].time)} ~ ${date.format(points.at(-1).time)} · ${won.format(low)} ~ ${won.format(high)}`;
-    canvas.setAttribute('aria-label', `종가 차트, ${range}`);
-    byId('stockChartRange').textContent = range;
-    return true;
+    const label = periodButtons.find((button) => button.dataset.period === period).textContent;
+    const interval = ['1d', '3d'].includes(period) ? '1분봉' : '일봉';
+    byId('stockChartTitle').textContent = `${label} 주가 · ${interval}`;
+    byId('stockChartRange').textContent = `${date.format(points[0].time)} ~ ${date.format(points.at(-1).time)} · 가격 단위 원`;
+    pointIndex.max = String(points.length - 1);
+    pointIndex.value = pointIndex.max;
+    pointIndex.disabled = points.length === 1;
+    drawChart(points.length - 1);
   };
 
-  const loadStock = () => {
-    pending?.abort();
-    pending = new AbortController();
-    const { signal } = pending;
-    const code = symbol.value;
-    const name = symbol.selectedOptions[0].textContent.split(' (')[0];
+  const loadPrices = async () => {
+    priceRequest?.abort();
+    priceRequest = new AbortController();
+    const { signal } = priceRequest;
     quote.hidden = true;
     chart.hidden = true;
-    newsList.replaceChildren();
-    status.textContent = '시세 조회 중…';
-    newsStatus.textContent = '관련 뉴스 조회 중…';
-
-    loadJson(`/api/stocks/${code}`, signal).then((data) => {
+    status.textContent = `${selectedStock.name} 시세 조회 중…`;
+    try {
+      const code = selectedStock.symbol;
+      const data = await loadJson(`/api/stocks/${code}?period=${period}`, signal);
       if (signal.aborted) return;
-      byId('stockName').textContent = name;
+      byId('stockName').textContent = selectedStock.name;
       byId('stockCode').textContent = code;
-      byId('stockPrice').textContent = won.format(Number(data.quote.lastPrice));
+      const price = Number(data.quote.lastPrice);
+      byId('stockPrice').textContent = `${number.format(price)}원`;
       byId('stockTime').textContent = `시세 기준 ${dateTime.format(new Date(data.quote.timestamp))}`;
-      const quoteDay = date.format(new Date(data.quote.timestamp));
-      const previous = data.candles.find((candle) => {
-        const candleTime = Date.parse(candle.timestamp);
-        return candleTime < Date.parse(data.quote.timestamp) && date.format(candleTime) !== quoteDay;
-      });
-      const previousClose = Number(previous?.closePrice);
-      const change = (Number(data.quote.lastPrice) / previousClose - 1) * 100;
-      byId('stockChange').textContent = previousClose > 0 && Number.isFinite(change)
-        ? `전일 대비 ${change > 0 ? '+' : ''}${change.toFixed(2)}%` : '';
-      byId('stockChange').dataset.direction = change > 0 ? 'up' : change < 0 ? 'down' : '';
+      const previous = Number(data.previousClose);
+      const change = (price / previous - 1) * 100;
+      const changeLabel = byId('stockChange');
+      changeLabel.textContent = previous > 0 && Number.isFinite(change)
+        ? `전 거래일 대비 ${change > 0 ? '+' : ''}${change.toFixed(2)}%` : '';
+      changeLabel.dataset.direction = change > 0 ? 'up' : change < 0 ? 'down' : '';
       quote.hidden = false;
-      chart.hidden = !drawChart(data.candles);
-      status.textContent = chart.hidden ? '표시할 일봉 데이터가 없습니다.' : '';
-    }).catch(() => {
-      if (!signal.aborted) status.textContent = '토스증권 시세를 불러오지 못했습니다.';
-    });
+      showChart(data.candles);
+      status.textContent = chart.hidden ? '선택한 기간의 차트 데이터가 없습니다.' : '';
+    } catch (error) {
+      if (signal.aborted) return;
+      status.textContent = error.message === '404'
+        ? '토스증권에서 이 종목의 시세를 찾지 못했습니다.'
+        : '시세를 불러오지 못했습니다. 기간 버튼을 다시 누르면 재시도합니다.';
+    }
+  };
 
-    const params = new URLSearchParams({ query: name, display: '5' });
-    loadJson(`/api/news?${params}`, signal).then(({ items }) => {
+  const loadNews = async () => {
+    newsRequest?.abort();
+    newsRequest = new AbortController();
+    const { signal } = newsRequest;
+    const params = new URLSearchParams({ query: selectedStock.name, display: '5' });
+    newsList.replaceChildren();
+    newsStatus.textContent = '관련 뉴스 조회 중…';
+    try {
+      const { items } = await loadJson(`/api/news?${params}`, signal);
       if (signal.aborted) return;
       for (const item of items) {
         let url;
@@ -415,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch {
           continue;
         }
-        if (!url || !['https:', 'http:'].includes(url.protocol)) continue;
+        if (!['https:', 'http:'].includes(url.protocol)) continue;
         const li = document.createElement('li');
         const link = document.createElement('a');
         link.href = url.href;
@@ -426,12 +485,66 @@ document.addEventListener('DOMContentLoaded', () => {
         newsList.append(li);
       }
       newsStatus.textContent = newsList.children.length ? '' : '관련 뉴스가 없습니다.';
-    }).catch(() => {
+    } catch {
       if (!signal.aborted) newsStatus.textContent = '관련 뉴스를 불러오지 못했습니다.';
-    });
+    }
   };
 
-  let activeView;
+  byId('stockForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const input = byId('stockSearch');
+    const q = input.value.trim();
+    if (!q) return;
+    searchRequest?.abort();
+    searchRequest = new AbortController();
+    const { signal } = searchRequest;
+    searchResults.replaceChildren();
+    searchStatus.textContent = '종목 검색 중…';
+    try {
+      const { items } = await loadJson(`/api/stocks/search?${new URLSearchParams({ q })}`, signal);
+      if (signal.aborted) return;
+      for (const item of items) {
+        const li = document.createElement('li');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = `${item.name} · ${item.symbol} · ${item.market}`;
+        button.addEventListener('click', () => {
+          selectedStock = item;
+          input.value = item.name;
+          searchResults.replaceChildren();
+          searchStatus.textContent = '';
+          input.focus({ preventScroll: true });
+          loadPrices();
+          loadNews();
+        });
+        li.append(button);
+        searchResults.append(li);
+      }
+      searchStatus.textContent = items.length ? '조회할 종목을 선택하세요.' : '일치하는 종목이 없습니다.';
+    } catch {
+      if (!signal.aborted) searchStatus.textContent = '종목 검색을 완료하지 못했습니다. 다시 시도하세요.';
+    }
+  });
+
+  periodButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      period = button.dataset.period;
+      periodButtons.forEach((entry) => entry.setAttribute('aria-pressed', String(entry === button)));
+      loadPrices();
+    });
+  });
+  pointIndex.addEventListener('input', () => drawChart(Number(pointIndex.value)));
+  window.addEventListener('resize', () => drawChart(Number(pointIndex.value)));
+  canvas.addEventListener('pointermove', (event) => {
+    if (event.pointerType === 'touch' || !points.length) return;
+    const { left, width } = canvas.getBoundingClientRect();
+    const start = Math.min(76, width / 3);
+    const ratio = Math.max(0, Math.min(1, (event.clientX - left - start) / (width - start - 12)));
+    const index = Math.round(ratio * (points.length - 1));
+    if (Number(pointIndex.value) === index) return;
+    pointIndex.value = String(index);
+    drawChart(index);
+  });
 
   const syncView = () => {
     const view = location.hash === '#stockPanel' ? 'stocks' : 'news';
@@ -442,15 +555,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const inactive = showingStocks ? newsButton : stocksButton;
     selected.setAttribute('aria-current', 'page');
     inactive.removeAttribute('aria-current');
-    if (showingStocks) loadStock();
-    else pending?.abort();
+    if (showingStocks) {
+      loadPrices();
+      loadNews();
+    } else {
+      priceRequest?.abort();
+      newsRequest?.abort();
+      searchRequest?.abort();
+      searchStatus.textContent = '';
+    }
   };
 
   window.addEventListener('hashchange', syncView);
   syncView();
-  symbol.addEventListener('change', loadStock);
-  byId('stockForm').addEventListener('submit', (event) => {
-    event.preventDefault();
-    loadStock();
-  });
 });

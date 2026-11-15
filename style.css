@@ -74,15 +74,6 @@
 }
 .stock-form { flex-wrap: wrap; margin-bottom: 16px; }
 .stock-form label { font-size: .85rem; font-weight: 700; }
-.stock-form select {
-  min-width: min(230px, 100%);
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  color: var(--ink);
-  background: white;
-  font: inherit;
-}
 #stockStatus:empty, #stockNewsStatus:empty, #stockChange:empty { display: none; }
 #stockStatus, #stockNewsStatus { color: #53666d; font-size: .82rem; }
 #stockQuote, .stock-chart, .stock-news { border-radius: 12px; }
@@ -114,3 +105,30 @@
   #stockPanel:target { scroll-margin-top: 62px; }
   .topbar { justify-content: space-between; }
 }
+
+.stock-form input {
+  width: min(320px, 100%);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: white;
+  color: var(--ink);
+  font: inherit;
+}
+.stock-periods { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0; }
+.stock-periods button, .stock-results button {
+  padding: 8px 12px;
+  color: var(--ink);
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.stock-periods button[aria-pressed="true"] { background: var(--navy); color: white; }
+.stock-message { color: #53666d; font-size: .82rem; }
+.stock-message:empty, .stock-results:empty { display: none; }
+.stock-results { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.stock-results button { width: 100%; text-align: left; }
+.stock-results button:hover { background: var(--paper); }
+.stock-point { font-variant-numeric: tabular-nums; color: #315e65; font-weight: 700; font-size: .83rem; }
+.stock-chart canvas { height: 250px; }
+.stock-point-index { width: 100%; accent-color: #315e65; }
