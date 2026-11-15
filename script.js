@@ -711,6 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const input = byId('marketChatQuery');
   const send = byId('marketChatSend');
   const log = byId('marketChatLog');
+  const transcript = byId('marketChatTranscript');
   const status = byId('marketChatStatus');
   const setOpen = (open) => {
     panel.hidden = !open;
@@ -724,7 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
     message.className = user ? 'market-chat-message user' : 'market-chat-message';
     message.textContent = text;
     log.append(message);
-    log.scrollTop = log.scrollHeight;
+    transcript.scrollTop = transcript.scrollHeight;
   };
 
   const renderSources = (sources) => {
@@ -745,7 +746,7 @@ document.addEventListener('DOMContentLoaded', () => {
       list.append(item);
     });
     if (list.children.length) log.append(list);
-    log.scrollTop = log.scrollHeight;
+    transcript.scrollTop = transcript.scrollHeight;
   };
 
   toggle.addEventListener('click', () => setOpen(panel.hidden));
