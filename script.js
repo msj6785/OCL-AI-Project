@@ -833,6 +833,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const transcript = byId('marketChatTranscript');
   const status = byId('marketChatStatus');
   const history = [];
+  const resizeHandle = byId('marketChatResize');
+  let resizeStart = null;
+  const resizePanel = (width, height) => {
+    const maxWidth = Math.max(1, window.innerWidth - 44);
+    const maxHeight = Math.max(1, window.innerHeight - 100);
+    panel.style.width = `${Math.max(Math.min(300, maxWidth), Math.min(width, maxWidth))}px`;
+    panel.style.height = `${Math.max(Math.min(280, maxHeight), Math.min(height, maxHeight))}px`;
+  };
+  resizeHandle.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return;
+    const { width, height } = panel.getBoundingClientRect();
+    resizeStart = { x: event.clientX, y: event.clientY, width, height, id: event.pointerId };
+    resizeHandle.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  });
+  resizeHandle.addEventListener('pointermove', (event) => {
+    if (!resizeStart || event.pointerId !== resizeStart.id) return;
+    resizePanel(resizeStart.width + resizeStart.x - event.clientX,
+      resizeStart.height + resizeStart.y - event.clientY);
+  });
+  const stopResize = () => { resizeStart = null; };
+  resizeHandle.addEventListener('pointerup', stopResize);
+  resizeHandle.addEventListener('pointercancel', stopResize);
+  resizeHandle.addEventListener('lostpointercapture', stopResize);
+  resizeHandle.addEventListener('keydown', (event) => {
+    const changes = { ArrowLeft: [20, 0], ArrowRight: [-20, 0],
+      ArrowUp: [0, 20], ArrowDown: [0, -20] };
+    const change = changes[event.key];
+    if (!change) return;
+    event.preventDefault();
+    const { width, height } = panel.getBoundingClientRect();
+    resizePanel(width + change[0], height + change[1]);
+  });
   const setOpen = (open) => {
     panel.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
