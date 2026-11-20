@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=stocks-ui-13" />
+  <link rel="stylesheet" href="style.css?v=stocks-ui-15" />
 </head>
 <body>
   <div class="app-shell">
@@ -158,6 +158,7 @@
   <div class="market-chat">
     <button id="marketChatToggle" type="button" aria-expanded="false" aria-controls="marketChatPanel"><span aria-hidden="true">💬</span> AI 챗봇</button>
     <section id="marketChatPanel" class="market-chat-panel" aria-labelledby="marketChatTitle" hidden>
+      <button id="marketChatResize" class="market-chat-resize" type="button" aria-label="챗봇 크기 조절" title="드래그 또는 방향키로 크기 조절">⤢</button>
       <header class="market-chat-header">
         <span class="market-chat-avatar" aria-hidden="true">🤖</span>
         <h2 id="marketChatTitle">뉴스·주식 도우미</h2>
@@ -186,6 +187,6 @@
   </div>
 
   <div class="toast" id="toast" role="status"></div>
-  <script src="script.js?v=stocks-ui-14"></script>
+  <script src="script.js?v=stocks-ui-15"></script>
 </body>
 </html>
