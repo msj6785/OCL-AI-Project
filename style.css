@@ -210,6 +210,8 @@
   right: 0;
   width: min(390px, calc(100vw - 44px));
   height: min(560px, calc(100dvh - 100px));
+  max-width: calc(100vw - 44px);
+  max-height: calc(100dvh - 100px);
   overflow: hidden;
   background: white;
   border: 1px solid #d8e7db;
@@ -417,3 +419,23 @@
   .section-switch { gap: 4px; }
   .section-switch a, .theme-toggle { padding-inline: 8px; font-size: .75rem; }
 }
+
+.market-chat-resize {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 0 0 6px 0;
+  background: var(--chat-green-dark);
+  color: white;
+  cursor: nwse-resize;
+  touch-action: none;
+  user-select: none;
+  font-size: 17px;
+}
+.market-chat-resize:focus-visible { outline: 2px solid var(--coral); outline-offset: -2px; }
+.market-chat-header, #marketChatForm { flex-shrink: 0; }
