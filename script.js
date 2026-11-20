@@ -832,6 +832,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const log = byId('marketChatLog');
   const transcript = byId('marketChatTranscript');
   const status = byId('marketChatStatus');
+  const history = [];
   const setOpen = (open) => {
     panel.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
@@ -891,7 +892,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({ query, history }),
       });
       const result = await response.json();
       if (!response.ok) {
@@ -902,6 +903,10 @@ document.addEventListener('DOMContentLoaded', () => {
             : '답변을 가져오지 못했습니다. 다시 시도해 주세요.';
         return;
       }
+      history.push({ role: 'user', content: query }, {
+        role: 'assistant', content: result.answer.slice(0, 6000)
+      });
+      history.splice(0, Math.max(0, history.length - 8));
       renderMessage(result.answer);
       renderSources(result.sources);
       status.textContent = '';
