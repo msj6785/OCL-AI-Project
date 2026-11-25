@@ -3,22 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OCL-AI | NAVER 뉴스 모니터</title>
+  <title>OCL-AI | 뉴스 · 국내 주식</title>
   <meta name="description" content="NAVER 뉴스 검색 API를 이용한 실시간 뉴스 모니터" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=stocks-ui-15" />
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
       <a class="brand" href="#top"><span class="brand-mark">O</span><span>OCL<span>-AI</span></span></a>
-      <div class="workspace-label">NEWS MONITOR</div>
-      <nav class="side-nav">
-        <a class="side-link active" href="#top"><span class="nav-icon">▦</span> 뉴스 검색</a>
-        <a class="side-link" href="#timeline"><span class="nav-icon">◷</span> 최신 기사</a>
-      </nav>
+
+      <div id="sidebarStockFavorites">
+          <aside id="stockFavorites" class="stock-favorites" aria-labelledby="stockFavoritesTitle">
+            <h2 id="stockFavoritesTitle">국내 주식 즐겨찾기</h2>
+            <p id="stockFavoritesEmpty">저장한 종목이 없습니다.</p>
+            <ul id="stockFavoritesList" aria-label="즐겨찾는 종목"></ul>
+            <p id="stockFavoritesStatus" role="status"></p>
+          </aside>
+      </div>
       <div class="sidebar-section">
         <div class="section-caption">
           <span>최근 본 뉴스</span>
@@ -32,17 +36,23 @@
 
     <main class="main-content" id="top">
       <header class="topbar">
-        <div class="breadcrumb"><span>뉴스 검색</span><span class="slash">/</span><strong id="breadcrumbCase">검색어를 입력하세요</strong></div>
+        <a class="mobile-brand" href="#top">OCL-AI</a>
+        <nav class="section-switch" aria-label="서비스 메뉴">
+          <a href="#top" id="showNews" aria-current="page">뉴스</a>
+          <a href="#stockPanel" id="showStocks">국내 주식</a>
+        </nav>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-pressed="false">
+          <span aria-hidden="true">◐</span> 색상 반전
+        </button>
       </header>
 
-      <div class="content-wrap">
+      <div class="content-wrap" id="newsPanel">
         <section class="page-intro">
           <div>
-            <div class="kicker">NAVER NEWS SEARCH <span>●</span></div>
             <h1 id="pageTitle">뉴스 검색</h1>
             <p id="pageDescription">원하는 키워드를 입력해 NAVER 최신 뉴스를 조회합니다.</p>
             <form id="searchForm" class="search-form">
-              <input id="searchInput" type="search" placeholder="예: Kubernetes, 인공지능, 삼성전자" autocomplete="off" aria-label="뉴스 검색어" />
+              <input id="searchInput" type="search" placeholder="예: 삼성전자, AI, 네이버" autocomplete="off" aria-label="뉴스 검색어" />
               <button class="collect-button" type="submit">검색</button>
             </form>
           </div>
@@ -51,22 +61,12 @@
           </div>
         </section>
 
-        <section class="summary-grid current-summary" aria-label="검색 요약">
-          <article class="summary-card">
-            <div class="summary-label">현재 표시 기사</div>
-            <strong id="displayCount">-</strong>
-            <span class="summary-note">한 번에 최대 10건 표시</span>
-          </article>
-          <article class="summary-card">
-            <div class="summary-label">NAVER 검색 결과</div>
-            <strong id="articleCount">-</strong>
-            <span class="summary-note">검색 API가 반환한 전체 결과 수</span>
-          </article>
-          <article class="summary-card">
-            <div class="summary-label">마지막 조회</div>
-            <strong class="time-value" id="updateTime">--:--</strong>
-            <span class="summary-note" id="updateDate">아직 조회하지 않음</span>
-          </article>
+        <section class="today-news" aria-labelledby="todayNewsTitle">
+          <div class="today-news-heading">
+            <h2 id="todayNewsTitle">오늘의 뉴스</h2>
+            <a href="https://news.naver.com/main/ranking/popularDay.naver" target="_blank" rel="noopener noreferrer">네이버 랭킹뉴스 ↗</a>
+          </div>
+          <div id="todayNewsGrid" class="today-news-grid" aria-busy="true"></div>
         </section>
 
         <div class="section-bar">
@@ -84,21 +84,109 @@
           <button class="page-button" id="nextPage" type="button">다음 →</button>
         </nav>
 
-        <section class="api-info">
-          <div>
-            <span class="ai-mark">↗</span>
-            <div>
-              <h2>현재 구현된 기능</h2>
-              <p>키워드별 NAVER 뉴스 검색 · 페이지당 최신 기사 10건 · 이전/다음 페이지 이동 · 최근 본 뉴스 저장 · 기사 원문 링크</p>
-            </div>
-          </div>
-          <small>AI 요약·중복 기사 분석·출처 신뢰도 평가는 아직 적용하지 않았습니다.</small>
-        </section>
+
       </div>
+      <section class="content-wrap" id="stockPanel" aria-labelledby="stockTitle">
+        <div class="page-intro">
+          <div>
+            <h1 id="stockTitle">국내 주식</h1>
+            <p>관심 종목의 시세와 관련 뉴스를 확인하세요.</p>
+          </div>
+        </div>
+        <div id="mobileStockFavorites"></div>
+        <form id="stockForm" class="stock-form">
+          <label for="stockSearch">종목 검색</label>
+          <input id="stockSearch" type="search" placeholder="종목명 입력 (예: 네이버)" maxlength="40" />
+          <button class="collect-button" type="submit">검색</button>
+          <button id="browseStocks" class="outline-button" type="button">전체 종목</button>
+        </form>
+        <p id="stockSearchStatus" class="stock-message" role="status"></p>
+        <ul id="stockSearchResults" class="stock-results" aria-label="종목 검색 결과"></ul>
+        <nav id="stockPagination" class="stock-pagination" aria-label="종목 목록 페이지" hidden>
+          <button id="stockPrev" class="page-button" type="button">이전</button>
+          <span id="stockPage"></span>
+          <button id="stockNext" class="page-button" type="button">다음</button>
+        </nav>
+        <div class="stock-workspace">
+          <div class="stock-primary">
+            <div class="stock-toolbar">
+              <div class="stock-periods" id="stockPeriods" role="group" aria-label="차트 조회 기간">
+                <button type="button" data-period="1d" aria-pressed="false">1일</button>
+                <button type="button" data-period="3d" aria-pressed="false">3일</button>
+                <button type="button" data-period="1w" aria-pressed="false">1주</button>
+                <button type="button" data-period="1mo" aria-pressed="true">1개월</button>
+                <button type="button" data-period="1y" aria-pressed="false">1년</button>
+                <button type="button" data-period="3y" aria-pressed="false">3년</button>
+              </div>
+            </div>
+            <p id="stockStatus" role="status"></p>
+            <article class="summary-card" id="stockQuote" hidden>
+              <div class="stock-card-head">
+                <h2 id="stockName"></h2>
+                <button id="stockFavoriteToggle" class="outline-button stock-favorite-star" type="button" aria-label="즐겨찾기" aria-pressed="false">☆</button>
+              </div>
+              <span class="summary-label">현재가</span>
+              <strong id="stockPrice"></strong>
+              <span id="stockChange" class="summary-note"></span>
+              <span id="stockTime" class="summary-note"></span>
+            </article>
+            <article class="summary-card stock-chart" id="stockChart" hidden>
+              <div class="stock-card-head">
+                <h2 id="stockChartTitle">주가 차트</h2>
+                <span class="stock-code">토스증권</span>
+              </div>
+              <div class="stock-plot" id="stockPlot">
+                <canvas id="stockCanvas" height="250" role="img" tabindex="0" aria-describedby="stockPoint"></canvas>
+                <output id="stockPoint" class="stock-point" hidden></output>
+              </div>
+              <p class="summary-note" id="stockChartRange"></p>
+            </article>
+          </div>
+        </div>
+        <section class="stock-news" aria-labelledby="stockNewsTitle">
+          <div class="stock-card-head">
+            <h2 id="stockNewsTitle">종목 관련 뉴스</h2>
+            <span class="stock-code">네이버 뉴스</span>
+          </div>
+          <p id="stockNewsStatus" role="status"></p>
+          <ul id="stockNewsList"></ul>
+        </section>
+      </section>
     </main>
   </div>
 
+  <div class="market-chat">
+    <button id="marketChatToggle" type="button" aria-expanded="false" aria-controls="marketChatPanel"><span aria-hidden="true">💬</span> AI 챗봇</button>
+    <section id="marketChatPanel" class="market-chat-panel" aria-labelledby="marketChatTitle" hidden>
+      <button id="marketChatResize" class="market-chat-resize" type="button" aria-label="챗봇 크기 조절" title="드래그 또는 방향키로 크기 조절">⤢</button>
+      <header class="market-chat-header">
+        <span class="market-chat-avatar" aria-hidden="true">🤖</span>
+        <h2 id="marketChatTitle">뉴스·주식 도우미</h2>
+        <button id="marketChatClose" type="button" aria-label="챗봇 닫기">×</button>
+      </header>
+      <div id="marketChatTranscript" class="market-chat-transcript">
+        <div class="market-chat-message market-chat-examples" id="marketChatExamples">
+          <p>이렇게 질문해 보세요.</p>
+          <ul>
+            <li>삼성전자 주가 알려줘</li>
+            <li>AI 관련 최신 뉴스 찾아줘</li>
+            <li>관심 종목 추천해줘</li>
+            <li>읽을 만한 반도체 뉴스 추천해줘</li>
+          </ul>
+        </div>
+        <div id="marketChatLog" class="market-chat-log" role="log" aria-live="polite"></div>
+      </div>
+      <form id="marketChatForm">
+        <div class="market-chat-input">
+          <input id="marketChatQuery" aria-label="챗봇 질문" maxlength="160" placeholder="질문을 입력하세요" aria-describedby="marketChatExamples" />
+          <button id="marketChatSend" type="submit" aria-label="질문 전송">➜</button>
+        </div>
+        <p id="marketChatStatus" role="status"></p>
+      </form>
+    </section>
+  </div>
+
   <div class="toast" id="toast" role="status"></div>
-  <script src="script.js"></script>
+  <script src="script.js?v=stocks-ui-15"></script>
 </body>
 </html>
